@@ -1,0 +1,515 @@
+
+Jupyter Notebook
+L05-Assignment Last Checkpoint: 01/14/2020 (autosaved) [R 3.5.1]
+
+R Features: 
+    gather() or spread()
+    group_by()
+    summarize()
+    for() or walk() or map()
+    labs()
+    %>% pipe
+    Map data to color
+    A chart includes a categorical variable
+
+# Datasets: storms
+
+# Load libraries
+
+library(lubridate)
+
+library(tidyverse)
+
+
+
+# Explore data structure
+
+# Data: storms
+
+storms %>% glimpse()
+
+
+names(storms)
+
+# Display help on data
+
+? storms
+
+
+# Examine database
+
+storms
+
+str(storms)
+
+
+
+# Spread(): converts rows to 
+
+# columns so there would be fewer rows after spread() is applied.
+
+# We can consolidate the rows / columns 
+
+# Multiple rows for each name of storm. We can decrease this
+
+# by spreading the key-value pair across multiple columns
+
+#spread()
+
+dfstorms1 <-
+
+storms %>% spread(status, pressure)
+
+dfstorms1 %>% glimpse()
+
+
+
+Observations: 10,010
+Variables: 13
+$ name        <chr> "Amy", "Amy", "Amy", "Amy", "Amy", "Amy", "Amy", "Amy", ".
+$ year        <dbl> 1975, 1975, 1975, 1975, 1975, 1975, 1975, 1975, 1975, 197.
+$ month       <dbl> 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, .
+$ day         <int> 27, 27, 27, 27, 28, 28, 28, 28, 29, 29, 29, 29, 30, 30, 3.
+$ hour        <dbl> 0, 6, 12, 18, 0, 6, 12, 18, 0, 6, 12, 18, 0, 6, 12, 18, 0.
+$ lat         <dbl> 27.5, 28.5, 29.5, 30.5, 31.5, 32.4, 33.3, 34.0, 34.4, 34..
+$ long        <dbl> -79.0, -79.0, -79.0, -79.0, -78.8, -78.7, -78.0, -77.0, -.
+$ status      <chr> "tropical depression", "tropical depression", "tropical d.
+$ category    <ord> -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0.
+$ wind        <int> 25, 25, 25, 25, 25, 25, 25, 30, 35, 40, 45, 50, 50, 55, 6.
+$ pressure    <int> 1013, 1013, 1013, 1013, 1012, 1012, 1011, 1006, 1004, 100.
+$ ts_diameter <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N.
+$ hu_diameter <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N.
+
+    'name' 'year' 'month' 'day' 'hour' 'lat' 'long' 'status' 'category' 'wind' 'pressure' 'ts_diameter' 'hu_diameter' 
+
+A tibble: 10010 × 13 name	year	month	day	hour	lat	long	status	category	wind	pressure	ts_diameter	hu_diameter
+<chr>	<dbl>	<dbl>	<int>	<dbl>	<dbl>	<dbl>	<chr>	<ord>	<int>	<int>	<dbl>	<dbl>
+Amy	1975	6	27	0	27.5	-79.0	tropical depression	-1	25	1013	NA	NA
+Amy	1975	6	27	6	28.5	-79.0	tropical depression	-1	25	1013	NA	NA
+Amy	1975	6	27	12	29.5	-79.0	tropical depression	-1	25	1013	NA	NA
+Amy	1975	6	27	18	30.5	-79.0	tropical depression	-1	25	1013	NA	NA
+Amy	1975	6	28	0	31.5	-78.8	tropical depression	-1	25	1012	NA	NA
+Amy	1975	6	28	6	32.4	-78.7	tropical depression	-1	25	1012	NA	NA
+Amy	1975	6	28	12	33.3	-78.0	tropical depression	-1	25	1011	NA	NA
+Amy	1975	6	28	18	34.0	-77.0	tropical depression	-1	30	1006	NA	NA
+Amy	1975	6	29	0	34.4	-75.8	tropical storm 	0 	35	1004	NA	NA
+Amy	1975	6	29	6	34.0	-74.8	tropical storm 	0 	40	1002	NA	NA
+Amy	1975	6	29	12	33.8	-73.8	tropical storm 	0 	45	1000	NA	NA
+Amy	1975	6	29	18	33.8	-72.8	tropical storm 	0 	50	998	NA	NA
+Amy	1975	6	30	0	34.3	-71.6	tropical storm 	0 	50	998	NA	NA
+Amy	1975	6	30	6	35.6	-70.8	tropical storm 	0 	55	998	NA	NA
+Amy	1975	6	30	12	35.9	-70.5	tropical storm 	0 	60	987	NA	NA
+Amy	1975	6	30	18	36.2	-70.2	tropical storm 	0 	60	987	NA	NA
+Amy	1975	7	1	0	36.2	-69.8	tropical storm 	0 	60	984	NA	NA
+Amy	1975	7	1	6	36.2	-69.4	tropical storm 	0 	60	984	NA	NA
+Amy	1975	7	1	12	36.2	-68.3	tropical storm 	0 	60	984	NA	NA
+Amy	1975	7	1	18	36.7	-67.2	tropical storm 	0 	60	984	NA	NA
+Amy	1975	7	2	0	37.4	-66.7	tropical storm 	0 	60	984	NA	NA
+Amy	1975	7	2	6	37.3	-65.9	tropical storm 	0 	60	984	NA	NA
+Amy	1975	7	2	12	37.3	-65.1	tropical storm 	0 	60	981	NA	NA
+Amy	1975	7	2	18	37.3	-64.1	tropical storm 	0 	60	986	NA	NA
+Amy	1975	7	3	0	37.7	-62.8	tropical storm 	0 	55	986	NA	NA
+Amy	1975	7	3	6	38.2	-61.2	tropical storm 	0 	55	986	NA	NA
+Amy	1975	7	3	12	39.3	-59.6	tropical storm 	0 	55	986	NA	NA
+Amy	1975	7	3	18	40.5	-58.0	tropical storm 	0 	50	986	NA	NA
+Amy	1975	7	4	0	42.5	-54.8	tropical storm 	0 	50	986	NA	NA
+Amy	1975	7	4	6	44.5	-51.6	tropical storm 	0 	50	986	NA	NA
+???	???	???	???	???	???	???	???	???	???	???	???	???
+Joaquin	2015	10	3	18	26.3	-71.0	hurricane 	4 	130	934	333.7262	109.3241
+Joaquin	2015	10	4	0	27.4	-69.5	hurricane 	4 	115	941	333.7262	97.8163
+Joaquin	2015	10	4	6	28.9	-68.3	hurricane 	3 	105	949	333.7262	92.0624
+Joaquin	2015	10	4	12	30.4	-67.2	hurricane 	2 	95	956	322.2184	92.0624
+Joaquin	2015	10	4	18	31.6	-66.5	hurricane 	2 	85	958	333.7262	80.5546
+Joaquin	2015	10	5	0	32.6	-66.0	hurricane 	1 	75	961	345.2340	74.8007
+Joaquin	2015	10	5	6	33.6	-65.6	hurricane 	1 	75	964	345.2340	74.8007
+Joaquin	2015	10	5	12	34.4	-65.2	hurricane 	1 	75	964	356.7418	74.8007
+Joaquin	2015	10	5	18	35.3	-64.5	hurricane 	1 	75	964	368.2496	69.0468
+Joaquin	2015	10	6	0	36.2	-63.6	hurricane 	1 	75	967	368.2496	69.0468
+Joaquin	2015	10	6	6	37.0	-62.3	hurricane 	1 	75	970	379.7574	74.8007
+Joaquin	2015	10	6	12	37.9	-60.4	hurricane 	1 	70	974	402.7730	80.5546
+Joaquin	2015	10	6	18	38.8	-58.0	hurricane 	1 	70	974	414.2808	80.5546
+Joaquin	2015	10	7	0	39.6	-54.9	hurricane 	1 	70	974	437.2964	86.3085
+Joaquin	2015	10	7	6	40.3	-51.5	hurricane 	1 	65	977	448.8042	80.5546
+Joaquin	2015	10	7	12	41.0	-47.5	tropical storm 	0 	60	977	471.8198	0.0000
+Joaquin	2015	10	7	18	41.5	-43.3	tropical storm 	0 	60	977	483.3276	0.0000
+Kate 	2015	11	8	18	22.2	-71.5	tropical depression	-1	30	1010	0.0000	0.0000
+Kate 	2015	11	9	0	22.8	-72.6	tropical depression	-1	30	1010	0.0000	0.0000
+Kate 	2015	11	9	6	23.4	-73.7	tropical storm 	0 	35	1010	57.5390	0.0000
+Kate 	2015	11	9	12	24.1	-74.8	tropical storm 	0 	40	1008	69.0468	0.0000
+Kate 	2015	11	9	18	25.0	-75.7	tropical storm 	0 	45	1008	80.5546	0.0000
+Kate 	2015	11	10	0	26.4	-76.2	tropical storm 	0 	50	1006	80.5546	0.0000
+Kate 	2015	11	10	6	28.0	-76.2	tropical storm 	0 	55	1003	103.5702	0.0000
+Kate 	2015	11	10	12	29.5	-75.4	tropical storm 	0 	60	998	103.5702	0.0000
+Kate 	2015	11	10	18	31.2	-74.0	tropical storm 	0 	60	993	103.5702	0.0000
+Kate 	2015	11	11	0	33.1	-71.3	hurricane 	1 	65	990	161.1092	23.0156
+Kate 	2015	11	11	6	35.2	-67.6	hurricane 	1 	70	985	207.1404	23.0156
+Kate 	2015	11	11	12	36.2	-62.5	hurricane 	1 	75	980	345.2340	34.5234
+Kate 	2015	11	11	18	37.6	-58.2	hurricane 	1 	65	980	379.7574	46.0312
+
+Classes 'tbl_df', 'tbl' and 'data.frame':	10010 obs. of  13 variables:
+ $ name       : chr  "Amy" "Amy" "Amy" "Amy" ...
+ $ year       : num  1975 1975 1975 1975 1975 ...
+ $ month      : num  6 6 6 6 6 6 6 6 6 6 ...
+ $ day        : int  27 27 27 27 28 28 28 28 29 29 ...
+ $ hour       : num  0 6 12 18 0 6 12 18 0 6 ...
+ $ lat        : num  27.5 28.5 29.5 30.5 31.5 32.4 33.3 34 34.4 34 ...
+ $ long       : num  -79 -79 -79 -79 -78.8 -78.7 -78 -77 -75.8 -74.8 ...
+ $ status     : chr  "tropical depression" "tropical depression" "tropical depression" "tropical depression" ...
+ $ category   : Ord.factor w/ 7 levels "-1"<"0"<"1"<"2"<..: 1 1 1 1 1 1 1 1 2 2 ...
+ $ wind       : int  25 25 25 25 25 25 25 30 35 40 ...
+ $ pressure   : int  1013 1013 1013 1013 1012 1012 1011 1006 1004 1002 ...
+ $ ts_diameter: num  NA NA NA NA NA NA NA NA NA NA ...
+ $ hu_diameter: num  NA NA NA NA NA NA NA NA NA NA ...
+Observations: 10,010
+Variables: 14
+$ name                  <chr> "Amy", "Amy", "Amy", "Amy", "Amy", "Amy", "Amy".
+$ year                  <dbl> 1975, 1975, 1975, 1975, 1975, 1975, 1975, 1975,.
+$ month                 <dbl> 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,.
+$ day                   <int> 27, 27, 27, 27, 28, 28, 28, 28, 29, 29, 29, 29,.
+$ hour                  <dbl> 0, 6, 12, 18, 0, 6, 12, 18, 0, 6, 12, 18, 0, 6,.
+$ lat                   <dbl> 27.5, 28.5, 29.5, 30.5, 31.5, 32.4, 33.3, 34.0,.
+$ long                  <dbl> -79.0, -79.0, -79.0, -79.0, -78.8, -78.7, -78.0.
+$ category              <ord> -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, .
+$ wind                  <int> 25, 25, 25, 25, 25, 25, 25, 30, 35, 40, 45, 50,.
+$ ts_diameter           <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ hu_diameter           <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ hurricane             <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ `tropical depression` <int> 1013, 1013, 1013, 1013, 1012, 1012, 1011, 1006,.
+$ `tropical storm`      <int> NA, NA, NA, NA, NA, NA, NA, NA, 1004, 1002, 100.
+
+Data processing
+
+Create a new data frame(s) with appropriate data types and data cleaning for the data.
+
+#variables:
+
+#A tibble with 10,010 observations and 13 variables:
+
+
+
+# name
+
+# Storm Name
+
+# year,month,day
+
+# Date of report
+
+# hour
+
+# Hour of report (in UTC)
+
+# lat,long
+
+# Location of storm center
+
+# status
+
+# Storm classification (Tropical Depression, Tropical Storm, or Hurricane)
+
+#category
+
+# Saffir-Simpson storm category (estimated from wind speed. -1 = Tropical Depression, 0 = Tropical Storm)
+
+# wind
+
+# storm's maximum sustained wind speed (in knots)
+
+# pressure
+
+# Air pressure at the storm's center (in millibars)
+
+# ts_diameter
+
+# Diameter of the area experiencing tropical storm strength winds (34 knots or above)
+
+# hu_diameter
+
+# Diameter of the area experiencing hurricane strength winds (64 knots or above)
+
+# clean and arrage data into new dfs
+
+
+# use distinct() function to keep only unique/distinct rows from the df
+
+# and remove duplicates 
+
+# use summarize() function to reduce the data frame 
+
+# to a summary of just one vector or value (distinct storms category)
+
+# arrange values in descending order
+
+
+
+dfstorms1 <- storms %>% distinct(storms$name)
+
+storms %>% group_by(name) %>%
+  
+  summarize(n = n()) %>%
+  
+  arrange(n %>% desc())
+
+
+
+dfstorms1 <- storms %>% distinct(storms$category)
+
+storms %>% group_by(category)  %>%
+  
+  summarize(n = n()) %>%
+  
+  arrange(n %>% desc())
+
+
+
+dfstorms1 <- storms %>%
+  
+  group_by(category) %>%
+  
+  tally(sort = TRUE)
+
+
+
+# Gather everything but ts_diameter to tidy data - with focus on
+# larger storms - hurricanes
+
+dfstorms2 <- storms %>%
+  
+  gather(key = key, value = name, -ts_diameter, hu_diameter)
+
+
+dfstorms2 %>% glimpse()
+
+str(dfstorms2)
+
+dfstorms1 %>% glimpse()
+
+A tibble: 198 × 2 name	n
+<chr>	<int>
+  Emily 	207
+Bonnie 	185
+Claudette	180
+Felix 	178
+Alberto 	170
+Danielle 	157
+Isidore 	156
+Edouard 	149
+Danny 	146
+Ivan 	144
+Josephine	143
+Erin 	141
+Gordon 	140
+Gustav 	136
+Jeanne 	136
+Lili 	136
+Gert 	133
+Debby 	130
+Gabrielle	130
+Dean 	128
+Gloria 	125
+Ernesto 	122
+Isaac 	122
+Chantal 	118
+Chris 	115
+Barry 	111
+Floyd 	110
+Hortense 	109
+Arthur 	108
+Beryl 	106
+???	???
+AL102004	8
+AL121991	8
+Al202011	8
+Eight 	8
+Peter 	8
+Shary 	8
+Tammy 	8
+AL041991	7
+AL072003	7
+AL091994	7
+AL101994	7
+One 	7
+Sixteen 	7
+AL021994	6
+AL092000	6
+Amelia 	6
+Fernand 	6
+Fifteen 	6
+AL021992	5
+AL022001	5
+AL022006	5
+AL072002	5
+AL101991	5
+AL101993	5
+AL012000	4
+AL021999	4
+AL022003	4
+AL092001	4
+AL092003	4
+Five 	2
+A tibble: 7 × 2 category	n
+<ord>	<int>
+  0 	4373
+-1	2545
+1 	1685
+2 	628
+3 	363
+4 	348
+5 	68
+
+Warning message:
+  "attributes are not identical across measure variables;
+they will be dropped"
+
+Observations: 120,120
+Variables: 3
+$ ts_diameter <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N.
+$ key         <chr> "name", "name", "name", "name", "name", "name", "name", ".
+$ name        <chr> "Amy", "Amy", "Amy", "Amy", "Amy", "Amy", "Amy", "Amy", ".
+Classes 'tbl_df', 'tbl' and 'data.frame':	120120 obs. of  3 variables:
+  $ ts_diameter: num  NA NA NA NA NA NA NA NA NA NA ...
+$ key        : chr  "name" "name" "name" "name" ...
+$ name       : chr  "Amy" "Amy" "Amy" "Amy" ...
+Observations: 7
+Variables: 2
+$ category <ord> 0, -1, 1, 2, 3, 4, 5
+$ n        <int> 4373, 2545, 1685, 628, 363, 348, 68
+
+# Charts 1 - 3
+
+# Create x and y columns to correspond with the x and y axis 
+# columns use a for loop to iterate through the x and y axis columns
+# and create a scatter graph with these variables
+
+
+
+# WALK() OR FOR()
+
+# walk(), which recursively descends a directory tree, calling a user-supplied
+
+# map returns a list function in each directory within the tree.
+
+# for() is one of the most popular functions in R. As you know,
+# it is used to create loops.
+
+#For example, let's calculate squared values for 1 to 3.
+
+# for (i in 1:3) {
+
+#   squared <- i ^ 2
+
+#  print(squared)
+
+# }
+
+
+
+# plot hu_diameter vs category
+
+storms %>% ggplot(mapping = aes(x = ts_diameter, y = category)) + 
+  
+  geom_jitter(alpha = 0.5) + 
+  
+  geom_smooth(method = "lm", se = FALSE)
+  
+  
+
+# create for() loop 
+
+# create x and y columns to correspond with the x and y axis columns
+
+# assign to variable gg_scatter
+
+# use function(data) and ggplot() functions to 
+
+# 1st - (using data function) store and retrieve any associated data 
+
+# pass in data frame as data &
+
+# 2nd - (using ggplot) map x_col and y_col
+
+# to the x and y axis columns in the graph (assign to plt variable)
+
+
+gg_scatter <- function(data, x_col, y_col) {
+  
+  # generate plot stored as plt
+  
+  plt <- data %>% ggplot(mapping = aes_string(x = x_col, y = y_col)) + 
+    
+    geom_jitter(alpha = 0.5) + 
+    
+    geom_smooth(method = "lm", se = FALSE) +
+    
+    ggtitle(str_c(y_col, " vs ", x_col), 
+            
+            subtitle = str_c("Row count:", data %>% nrow()))
+  
+  # print plot
+  
+  # Hint: print()
+  
+  plt %>% print()
+  
+}
+
+
+
+# Call function for ts_diameter, wind, and pressure all vs category
+
+storms %>% gg_scatter("hu_diameter", "category")
+
+storms %>% gg_scatter("wind", "category")
+
+storms %>% gg_scatter("pressure", "category")
+
+
+
+# Define the x axis columns in 
+
+# a character vector x_cols
+
+# for ts_diameter, wind, pressure
+
+# Hint: c()
+
+x_cols <- c("hu_diameter", "wind", "pressure")
+
+
+
+# Create a for loop and call gg_scatter
+
+# Use storms, x_cols, and "category"
+
+for(x_col in x_cols) {
+  
+  storms %>% gg_scatter(x_col, "category")
+  
+}
+
+
+
+Warning message:
+  "Removed 6528 rows containing non-finite values (stat_smooth)."Warning message:
+  "Removed 6528 rows containing missing values (geom_point)."Warning message:
+  "Removed 6528 rows containing non-finite values (stat_smooth)."Warning message:
+  "Removed 6528 rows containing missing values (geom_point)."
+
+Warning message:
+  "Removed 6528 rows containing non-finite values (stat_smooth)."Warning message:
+  "Removed 6528 rows containing missing values (geom_point)."
+
+Analysis and Conclusions
+
+gather(), spread(), group_by(), and summarize() functions were used
+# to explore functionality.
+
+A for() loop was created to loop through the x_col and y_col values,
+# which were created to correspond with the x and y axis columns in each graph. 
+# ts_diameter, hu_diameter, wind, and pressure were all mapped on the y column, 
+# with category on the x column. The relationship between these variables is 
+# explored in the corresponding graphs. Higher pressure is surprisingly associated 
+# with lower storm categories, while higher winds is associated with higher storm
+# categories. The data variation becomes smaller with associated higher ts_diameter
+# values, while beyond category 1, the data variation was relatively unchanged
+# in association with hs_diameter.
