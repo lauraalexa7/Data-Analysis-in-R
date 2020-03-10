@@ -1,0 +1,1070 @@
+
+Jupyter Notebook
+L04-Assignment Last Checkpoint: 12/26/2019 (autosaved) [R 3.5.1]
+
+R 3.5.1
+
+Analyze the sales at AdventureWorks.
+
+R features: 
+
+dbConnect()
+dbGetQuery()
+dbDisconnect()
+distinct()
+inner_join()
+semi_join()
+filter()
+as.factor()
+str_ (one of the many str_ functions)
+labs()
+%>% pipe
+# Map data to color
+# A chart includes a categorical variable
+
+# Datasets: AdventureWorks
+# Load libraries
+
+library(odbc) # odbc
+
+library(DBI) # DBI
+
+library(lubridate)
+
+library(tidyverse) # tidyverse
+
+
+# Connection string info
+# Enter SQL credentials
+driver_name <- "private"
+server_name <- "private"
+database_name <- "AdventureWorks2016CTP3" 
+user_id <- "sqlstudentreader"
+password <- "PA6aX2gAhe4hE!ru$6atru"
+
+
+# Connect to the database
+# Store connection in conn variable
+conn <- dbConnect(odbc::odbc(), 
+                  
+                  driver = driver_name, 
+                  
+                  server = server_name, 
+                  
+                  database = database_name,
+                  
+                  uid = user_id,
+                  
+                  pwd = password)
+
+
+# Print the connection object
+
+print(conn)
+
+<OdbcConnection> sqlstudentreader@UWC-SQLSERVER
+Database: AdventureWorks2016CTP3
+Microsoft SQL Server Version: 13.00.4259
+
+
+
+Data processing
+
+Create a new data frame(s) with appropriate data types and data cleaning for the data.
+
+# sales Order tables
+
+# Get Sales.SalesOrderHeader
+
+sql_select <- "SELECT * FROM Sales.SalesOrderHeader"
+
+df_sales_order_header <- conn %>%
+  
+  dbGetQuery(sql_select)
+
+
+
+# Get Sales.SalesOrderDetail
+
+sql_select <- "SELECT * FROM Sales.SalesOrderDetail"
+
+df_sales_order_detail <- conn %>%
+  
+  dbGetQuery(sql_select)
+
+
+
+# Glimpse results
+
+glimpse(df_sales_order_header)
+
+#glimpse(df_purchasing_order_detail)
+
+glimpse(df_sales_order_detail)
+
+#glimpse(df_sales_shopping_cart_item)
+
+
+
+# Notice that the SalesOrderID column is present in both tables.
+
+# In SalesOrderHeader it is the primary key meaning that
+
+# there is only one row for each unique value.
+
+# In SalesOrderDetail it is a foreign key and multiple rows
+
+# may have the same value.
+
+
+
+# Check the row count for SalesOrderHeader using nrow()
+
+# Check to see if there are any distinct values compared 
+
+# to the nrows. If all values match up, you have a primary ID
+
+# use nrow() and distinct() to determine primary key
+
+# distinct selects only distinct/unique rows from input tbl
+
+# get row count sales_header 
+
+df_sales_order_header %>% nrow()
+
+
+# get distinct row count for Sales ORDER ID
+
+df_sales_order_header %>% distinct(SalesOrderID) %>%
+  
+  nrow()
+
+
+# Notice that the overall row count and the
+
+# distinct row count for SalesOrderID is the same.
+
+# This is required for the primary key.
+
+# there is one column of the primary key #s that corresponds to
+# all row vals in SalesOrderID table
+
+# primary key vals only used once. 1 value listed 36k+ times
+
+
+
+# Compare the row count of sales_detail with distinct SalesOrderID vals
+
+# see if there are distinct values compared to the nrows
+
+df_sales_order_detail %>% nrow()
+
+df_sales_order_detail %>% distinct(SalesOrderID) %>%
+  
+  nrow()
+
+
+
+# Notice that the overall row count is much larger than the
+
+# distinct values of SalesOrderID. This is because SalesOrderID
+
+# is a foreign key with values used more than once.
+
+# The grain of the sales order detail table is one row per sales
+
+# transaction AND product ID. This allows storing of quantity - 
+# many values listed 121k+ times
+
+# of each product purchased. In contrast, the sales order header
+
+# does not contain product ID or its quantity purchased.
+
+# Notice the # of distinct SalesOrder IDs is the same in sales_header
+
+# as it is in sales_order. This indicates clean data/matches
+
+
+
+# semi_join return all rows from x that have matching values in y
+
+# Just keeps columns from x. Different from inner join because
+
+# inner join returns 1 row of x for each matching row of y 
+
+# whereas semi_join never duplicates rows of x
+
+
+# inner_join returns all rows from x 
+
+# that have matching values in y 
+
+# plus all columns from x & y 
+
+# if multiple matches between x & y, all combos of matches returned
+
+
+# Inner_join - join sales_header to sales_detail 
+
+# using automatic join column (omit the 'by' parameter)
+
+# store as df_sales_order_inner
+
+
+df_sales_order_inner <- df_sales_order_header %>%
+  
+  inner_join(df_sales_order_detail)
+
+
+glimpse(df_sales_order_inner)
+
+
+# Notice the error message in red and the number of rows returned. 
+
+# inner_join() selected all the columns that had matching names between 
+
+# the two dataframes as its best guess for which columns to join on. 
+
+# Although we wanted to join on the primary key which was just SalesOrderID, 
+
+# there were two more columns in common between the two tables, 
+# rowguid and ModifiedDate. 
+
+# The values of all three columns needed to match exactly
+# in order to return any rows. 
+
+# Thus no rows were returned because there were no exact matches.
+
+
+
+# Notice the columns are all the columns from the left table plus all 
+
+# the columns from the right table...except there is only one set of join columns. 
+
+# There is only one instance of SalesOrderID and the other two join columns. 
+
+# This makes sense because the join is looking for matching values from the two tables. 
+
+# If there was a SalesOrderID from the left table and a different SalesOrderID 
+
+# from the right table, they would always contain the same value so there 
+
+# is no need to include the join columns more than once.
+
+# In the above example, no rows were returned because of two reasons. 
+
+# The first is that it used three columns to join with, called a 
+
+# composite key which is a primary key that contains multiple columns.
+
+# The second is that inner join was used which requires exact
+# matches from the left and the right tables.
+
+
+
+# The reason there were no matches were because by default, 
+# the join functions look for the same 
+
+# column names between the two tables and use that. We can specify the *by parameter*
+
+# to override this default behavior. 
+
+# Join Sales.SalesOrderHeader and Sales.SalesOrderDetails
+
+# using inner_join() 
+
+# using by = "SalesOrderID"
+
+# store as df_sales_order
+
+df_sales_order <- df_sales_order_header %>%
+  
+  inner_join(df_sales_order_detail, by = "SalesOrderID")
+
+
+
+
+# Glimpse result
+
+glimpse(df_sales_order)
+
+
+
+# Recall that rowguid and ModifiedDate had the same name in both tables and that 
+
+# the auto join feature used these columns in its join earlier. 
+
+#Since we manually specified the join column using the 'by' 
+
+# parameter and didn't include these two columns, it created a 
+
+# naming conflict when combining the two tables together. In order 
+
+#  to include the conflicting columns from the left table and the right table, 
+
+# it renamed the columns appending a suffix. A suffix of '.x' means it came 
+
+# from the left table. A suffix of '.y' means it came from the right table.
+
+# Rename the conflicting .x and .y columns
+
+# using the naming convention <table>_<column>
+
+# update df_sales_order
+
+df_sales_order <- df_sales_order %>%
+  
+  rename(SalesOrderHeader_rowguid = rowguid.x,
+         
+         SalesOrderHeader_ModifiedDate = ModifiedDate.x,
+         
+         SalesOrderDetail_rowguid = rowguid.y,
+         
+         SalesOrderDetail_ModifiedDate = ModifiedDate.y)
+
+
+# Glimpse result
+
+glimpse(df_sales_order)
+
+# Notice the renamed columns and the '.x' and '.y' are gone. 
+
+# Renaming columns with the table name helps data traceability and troubleshooting. 
+
+# Alternatively, if these fields were not needed for the analysis, then consider
+
+# not importing these columns from SQL in the first place. This saves computer
+
+# resources and avoids unnecessary clean-up work later.
+
+
+
+# You can continue to join tables and create a single table at 
+# the lowest data grain with a large number of columns.
+
+# This is useful for machine learning algorithms where all the
+# data it processes must be in a single table.
+
+
+# For human analysis, however, it might be more effective to have several 
+# data frames you 
+# can easily join together as required. Consider a data
+# warehouse star schema as a guideline for how to design your dataframes.
+
+
+# Get Production.Product
+
+# exclude metadata columns: rowguid, ModifiedDate
+
+sql_select <- "SELECT * FROM Production.Product"
+
+df_product <- conn %>% 
+  
+  dbGetQuery(sql_select) %>% 
+  
+  select(-rowguid, -ModifiedDate)
+
+
+
+# Get Sales.SalesTerritory
+
+# exclude metadata columns: rowguid, ModifiedDate
+
+sql_select <- "SELECT * FROM Sales.SalesTerritory"
+
+df_sales_territory <- conn %>% 
+  
+  dbGetQuery(sql_select) %>% 
+  
+  select(-rowguid, -ModifiedDate)
+
+
+# Glimpse results
+
+glimpse(df_product)
+
+glimpse(df_sales_territory)
+
+
+# left join df_sales_order with
+
+# df_product and df_sales_territory
+
+# store df_sales_order_complete
+
+# do not specify the by parameter
+
+df_sales_order_complete <- df_sales_order %>% 
+  
+  left_join(df_product) %>% 
+  
+  left_join(df_sales_territory)
+
+
+
+# left join df_sales_order with
+
+# df_product and df_sales_territory
+
+# rename the Name columns to <table>_Name before joining
+
+# prevents single 'Name' column from being used as each table 
+
+# has its own 'Name column with individualized data
+
+# store df_sales_order_complete
+
+# do not specify the by parameter
+
+df_sales_order_complete <- df_sales_order %>%
+  
+  left_join(df_product %>% rename(Product_Name = Name)) %>%
+  
+  left_join(df_sales_territory %>% rename(SalesTerritory_Name = Name))
+
+
+# Glimpse result
+
+glimpse(df_sales_order_complete)
+
+
+
+# semi_join territory and sales_order without filter and glimpse()
+
+df_sales_order %>% semi_join(df_sales_territory) %>% glimpse()
+
+# semi_join()
+
+# and anti_join() are useful in situations where
+
+# you want to filter one dataframe by some criteria in another
+
+# dataframe but do not need the data from the other dataframe.
+
+# semi and anti joins perform the join
+
+# but don't add any of the rows from the right table.
+
+# They simply filter the left table.
+
+# A semi join retains rows when there is a match with the
+
+# right table. anti join has the opposite behavior,
+
+# retains only the rows not in the right table.
+
+# semi_join
+
+# semi join df_sales_order
+
+# with df_sales_territory
+
+# inline filtered on CountryRegionCode == "US"
+
+# glimpse result, do not store in variable
+
+
+# -----
+
+df_sales_order %>% semi_join(df_sales_territory %>% filter(CountryRegionCode == "US")) %>% 
+  
+  glimpse()
+
+df_sales_order %>% summary()
+
+
+# TerritoryID is the column listed from Sales_Territory
+
+# All other columns come from other connecting tables
+
+# Semi join matched on TerritoryID for each and every row - row count is
+# the same - 36
+
+# This is an indication of clean source data.
+
+# now you just need as.factor(), str, and labs
+
+
+# AS.FACTOR AND STR
+
+df_sales_order <- df_sales_order %>% mutate(UnitPrice = as.factor(UnitPrice))
+
+df_sales_order$UnitPrice %>% levels()
+
+df_sales_order %>% select(UnitPrice) %>%
+  
+  distinct() %>%
+  
+  arrange() %>%
+  
+  head(10)
+
+
+
+df_sales_order %>% colnames()
+
+str(df_sales_order$UnitPrice)
+
+str(df_sales_order$Freight)
+
+Observations: 31,465
+Variables: 26
+$ SalesOrderID           <int> 43659, 43660, 43661, 43662, 43663, 43664, 4366.
+$ RevisionNumber         <int> 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8.
+$ OrderDate              <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 2011-05-3.
+$ DueDate                <dttm> 2011-06-12, 2011-06-12, 2011-06-12, 2011-06-1.
+$ ShipDate               <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 2011-06-0.
+$ Status                 <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5.
+$ OnlineOrderFlag        <lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALS.
+$ SalesOrderNumber       <chr> "SO43659", "SO43660", "SO43661", "SO43662", "S.
+$ PurchaseOrderNumber    <chr> "PO522145787", "PO18850127500", "PO18473189620.
+$ AccountNumber          <chr> "10-4020-000676", "10-4020-000117", "10-4020-0.
+$ CustomerID             <int> 29825, 29672, 29734, 29994, 29565, 29898, 2958.
+$ SalesPersonID          <int> 279, 279, 282, 282, 276, 280, 283, 276, 277, 2.
+$ TerritoryID            <int> 5, 5, 6, 6, 4, 1, 1, 4, 3, 6, 1, 3, 1, 6, 2, 6.
+$ BillToAddressID        <int> 985, 921, 517, 482, 1073, 876, 849, 1074, 629,.
+$ ShipToAddressID        <int> 985, 921, 517, 482, 1073, 876, 849, 1074, 629,.
+$ ShipMethodID           <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5.
+$ CreditCardID           <int> 16281, 5618, 1346, 10456, 4322, 806, 15232, 13.
+$ CreditCardApprovalCode <chr> "105041Vi84182", "115213Vi29411", "85274Vi6854.
+$ CurrencyRateID         <int> NA, NA, 4, 4, NA, NA, NA, NA, NA, 4, NA, NA, N.
+$ SubTotal               <dbl> 20565.6206, 1294.2529, 32726.4786, 28832.5289,.
+$ TaxAmt                 <dbl> 1971.5149, 124.2483, 3153.7696, 2775.1646, 40..
+$ Freight                <dbl> 616.0984, 38.8276, 985.5530, 867.2389, 12.5838.
+$ TotalDue               <dbl> 23153.2339, 1457.3288, 36865.8012, 32474.9324,.
+$ Comment                <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA.
+$ rowguid                <chr> "79B65321-39CA-4115-9CBA-8FE0903E12E6", "738DC.
+$ ModifiedDate           <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 2011-06-0.
+Observations: 121,317
+Variables: 11
+$ SalesOrderID          <int> 43659, 43659, 43659, 43659, 43659, 43659, 43659.
+$ SalesOrderDetailID    <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, .
+$ CarrierTrackingNumber <chr> "4911-403C-98", "4911-403C-98", "4911-403C-98",.
+$ OrderQty              <int> 1, 3, 1, 1, 1, 2, 1, 3, 1, 6, 2, 4, 1, 1, 1, 1,.
+$ ProductID             <int> 776, 777, 778, 771, 772, 773, 774, 714, 716, 70.
+$ SpecialOfferID        <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,.
+$ UnitPrice             <dbl> 2024.9940, 2024.9940, 2024.9940, 2039.9940, 203.
+$ UnitPriceDiscount     <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,.
+$ LineTotal             <dbl> 2024.9940, 6074.9820, 2024.9940, 2039.9940, 203.
+$ rowguid               <chr> "B207C96D-D9E6-402B-8470-2CC176C42283", "7ABB60.
+$ ModifiedDate          <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 2011-05-31.
+
+31465
+31465
+121317
+31465
+
+Joining, by = c("SalesOrderID", "rowguid", "ModifiedDate")
+
+Observations: 0
+Variables: 34
+$ SalesOrderID           <int> 
+  $ RevisionNumber         <int> 
+  $ OrderDate              <dttm> 
+  $ DueDate                <dttm> 
+  $ ShipDate               <dttm> 
+  $ Status                 <int> 
+  $ OnlineOrderFlag        <lgl> 
+  $ SalesOrderNumber       <chr> 
+  $ PurchaseOrderNumber    <chr> 
+  $ AccountNumber          <chr> 
+  $ CustomerID             <int> 
+  $ SalesPersonID          <int> 
+  $ TerritoryID            <int> 
+  $ BillToAddressID        <int> 
+  $ ShipToAddressID        <int> 
+  $ ShipMethodID           <int> 
+  $ CreditCardID           <int> 
+  $ CreditCardApprovalCode <chr> 
+  $ CurrencyRateID         <int> 
+  $ SubTotal               <dbl> 
+  $ TaxAmt                 <dbl> 
+  $ Freight                <dbl> 
+  $ TotalDue               <dbl> 
+  $ Comment                <chr> 
+  $ rowguid                <chr> 
+  $ ModifiedDate           <dttm> 
+  $ SalesOrderDetailID     <int> 
+  $ CarrierTrackingNumber  <chr> 
+  $ OrderQty               <int> 
+  $ ProductID              <int> 
+  $ SpecialOfferID         <int> 
+  $ UnitPrice              <dbl> 
+  $ UnitPriceDiscount      <dbl> 
+  $ LineTotal              <dbl> 
+  Observations: 121,317
+Variables: 36
+$ SalesOrderID           <int> 43659, 43659, 43659, 43659, 43659, 43659, 4365.
+$ RevisionNumber         <int> 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8.
+$ OrderDate              <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 2011-05-3.
+$ DueDate                <dttm> 2011-06-12, 2011-06-12, 2011-06-12, 2011-06-1.
+$ ShipDate               <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 2011-06-0.
+$ Status                 <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5.
+$ OnlineOrderFlag        <lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALS.
+$ SalesOrderNumber       <chr> "SO43659", "SO43659", "SO43659", "SO43659", "S.
+$ PurchaseOrderNumber    <chr> "PO522145787", "PO522145787", "PO522145787", ".
+$ AccountNumber          <chr> "10-4020-000676", "10-4020-000676", "10-4020-0.
+$ CustomerID             <int> 29825, 29825, 29825, 29825, 29825, 29825, 2982.
+$ SalesPersonID          <int> 279, 279, 279, 279, 279, 279, 279, 279, 279, 2.
+$ TerritoryID            <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6.
+$ BillToAddressID        <int> 985, 985, 985, 985, 985, 985, 985, 985, 985, 9.
+$ ShipToAddressID        <int> 985, 985, 985, 985, 985, 985, 985, 985, 985, 9.
+$ ShipMethodID           <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5.
+$ CreditCardID           <int> 16281, 16281, 16281, 16281, 16281, 16281, 1628.
+$ CreditCardApprovalCode <chr> "105041Vi84182", "105041Vi84182", "105041Vi841.
+$ CurrencyRateID         <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA.
+$ SubTotal               <dbl> 20565.621, 20565.621, 20565.621, 20565.621, 20.
+$ TaxAmt                 <dbl> 1971.5149, 1971.5149, 1971.5149, 1971.5149, 19.
+$ Freight                <dbl> 616.0984, 616.0984, 616.0984, 616.0984, 616.09.
+$ TotalDue               <dbl> 23153.234, 23153.234, 23153.234, 23153.234, 23.
+$ Comment                <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA.
+$ rowguid.x              <chr> "79B65321-39CA-4115-9CBA-8FE0903E12E6", "79B65.
+$ ModifiedDate.x         <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 2011-06-0.
+$ SalesOrderDetailID     <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,.
+$ CarrierTrackingNumber  <chr> "4911-403C-98", "4911-403C-98", "4911-403C-98".
+$ OrderQty               <int> 1, 3, 1, 1, 1, 2, 1, 3, 1, 6, 2, 4, 1, 1, 1, 1.
+$ ProductID              <int> 776, 777, 778, 771, 772, 773, 774, 714, 716, 7.
+$ SpecialOfferID         <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.
+$ UnitPrice              <dbl> 2024.9940, 2024.9940, 2024.9940, 2039.9940, 20.
+$ UnitPriceDiscount      <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.
+$ LineTotal              <dbl> 2024.9940, 6074.9820, 2024.9940, 2039.9940, 20.
+$ rowguid.y              <chr> "B207C96D-D9E6-402B-8470-2CC176C42283", "7ABB6.
+$ ModifiedDate.y         <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 2011-05-3.
+Observations: 121,317
+Variables: 36
+$ SalesOrderID                  <int> 43659, 43659, 43659, 43659, 43659, 4365.
+$ RevisionNumber                <int> 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, .
+$ OrderDate                     <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+$ DueDate                       <dttm> 2011-06-12, 2011-06-12, 2011-06-12, 20.
+$ ShipDate                      <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 20.
+$ Status                        <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ OnlineOrderFlag               <lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALS.
+$ SalesOrderNumber              <chr> "SO43659", "SO43659", "SO43659", "SO436.
+$ PurchaseOrderNumber           <chr> "PO522145787", "PO522145787", "PO522145.
+$ AccountNumber                 <chr> "10-4020-000676", "10-4020-000676", "10.
+$ CustomerID                    <int> 29825, 29825, 29825, 29825, 29825, 2982.
+$ SalesPersonID                 <int> 279, 279, 279, 279, 279, 279, 279, 279,.
+$ TerritoryID                   <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ BillToAddressID               <int> 985, 985, 985, 985, 985, 985, 985, 985,.
+$ ShipToAddressID               <int> 985, 985, 985, 985, 985, 985, 985, 985,.
+$ ShipMethodID                  <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ CreditCardID                  <int> 16281, 16281, 16281, 16281, 16281, 1628.
+$ CreditCardApprovalCode        <chr> "105041Vi84182", "105041Vi84182", "1050.
+$ CurrencyRateID                <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SubTotal                      <dbl> 20565.621, 20565.621, 20565.621, 20565..
+$ TaxAmt                        <dbl> 1971.5149, 1971.5149, 1971.5149, 1971.5.
+$ Freight                       <dbl> 616.0984, 616.0984, 616.0984, 616.0984,.
+$ TotalDue                      <dbl> 23153.234, 23153.234, 23153.234, 23153..
+$ Comment                       <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SalesOrderHeader_rowguid      <chr> "79B65321-39CA-4115-9CBA-8FE0903E12E6",.
+$ SalesOrderHeader_ModifiedDate <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 20.
+$ SalesOrderDetailID            <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, .
+$ CarrierTrackingNumber         <chr> "4911-403C-98", "4911-403C-98", "4911-4.
+$ OrderQty                      <int> 1, 3, 1, 1, 1, 2, 1, 3, 1, 6, 2, 4, 1, .
+$ ProductID                     <int> 776, 777, 778, 771, 772, 773, 774, 714,.
+$ SpecialOfferID                <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, .
+$ UnitPrice                     <dbl> 2024.9940, 2024.9940, 2024.9940, 2039.9.
+$ UnitPriceDiscount             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .
+$ LineTotal                     <dbl> 2024.9940, 6074.9820, 2024.9940, 2039.9.
+$ SalesOrderDetail_rowguid      <chr> "B207C96D-D9E6-402B-8470-2CC176C42283",.
+$ SalesOrderDetail_ModifiedDate <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+
+Observations: 504
+Variables: 23
+$ ProductID             <int> 1, 2, 3, 4, 316, 317, 318, 319, 320, 321, 322, .
+$ Name                  <chr> "Adjustable Race", "Bearing Ball", "BB Ball Bea.
+$ ProductNumber         <chr> "AR-5381", "BA-8327", "BE-2349", "BE-2908", "BL.
+$ MakeFlag              <lgl> FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, .
+$ FinishedGoodsFlag     <lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE.
+$ Color                 <chr> NA, NA, NA, NA, NA, "Black", "Black", "Black", .
+$ SafetyStockLevel      <int> 1000, 1000, 800, 800, 800, 500, 500, 500, 1000,.
+$ ReorderPoint          <int> 750, 750, 600, 600, 600, 375, 375, 375, 750, 75.
+$ StandardCost          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,.
+$ ListPrice             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,.
+$ Size                  <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SizeUnitMeasureCode   <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ WeightUnitMeasureCode <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ Weight                <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ DaysToManufacture     <int> 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,.
+$ ProductLine           <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ Class                 <chr> NA, NA, NA, NA, NA, "L ", "M ", NA, NA, NA, NA,.
+$ Style                 <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ ProductSubcategoryID  <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ ProductModelID        <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SellStartDate         <dttm> 2008-04-30, 2008-04-30, 2008-04-30, 2008-04-30.
+$ SellEndDate           <dttm> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA.
+$ DiscontinuedDate      <dttm> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA.
+Observations: 10
+Variables: 8
+$ TerritoryID       <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+$ Name              <chr> "Northwest", "Northeast", "Central", "Southwest", ".
+$ CountryRegionCode <chr> "US", "US", "US", "US", "US", "CA", "FR", "DE", "AU.
+$ Group             <chr> "North America", "North America", "North America", .
+$ SalesYTD          <dbl> 7887187, 2402177, 3072175, 10510854, 2538667, 67718.
+$ SalesLastYear     <dbl> 3298694, 3607149, 3205014, 5366576, 3925071, 569398.
+$ CostYTD           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+$ CostLastYear      <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+Joining, by = "ProductID"
+Joining, by = c("TerritoryID", "Name")
+Joining, by = "ProductID"
+Joining, by = "TerritoryID"
+
+Observations: 121,317
+Variables: 65
+$ SalesOrderID                  <int> 43659, 43659, 43659, 43659, 43659, 4365.
+$ RevisionNumber                <int> 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, .
+$ OrderDate                     <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+$ DueDate                       <dttm> 2011-06-12, 2011-06-12, 2011-06-12, 20.
+$ ShipDate                      <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 20.
+$ Status                        <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ OnlineOrderFlag               <lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALS.
+$ SalesOrderNumber              <chr> "SO43659", "SO43659", "SO43659", "SO436.
+$ PurchaseOrderNumber           <chr> "PO522145787", "PO522145787", "PO522145.
+$ AccountNumber                 <chr> "10-4020-000676", "10-4020-000676", "10.
+$ CustomerID                    <int> 29825, 29825, 29825, 29825, 29825, 2982.
+$ SalesPersonID                 <int> 279, 279, 279, 279, 279, 279, 279, 279,.
+$ TerritoryID                   <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ BillToAddressID               <int> 985, 985, 985, 985, 985, 985, 985, 985,.
+$ ShipToAddressID               <int> 985, 985, 985, 985, 985, 985, 985, 985,.
+$ ShipMethodID                  <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ CreditCardID                  <int> 16281, 16281, 16281, 16281, 16281, 1628.
+$ CreditCardApprovalCode        <chr> "105041Vi84182", "105041Vi84182", "1050.
+$ CurrencyRateID                <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SubTotal                      <dbl> 20565.621, 20565.621, 20565.621, 20565..
+$ TaxAmt                        <dbl> 1971.5149, 1971.5149, 1971.5149, 1971.5.
+$ Freight                       <dbl> 616.0984, 616.0984, 616.0984, 616.0984,.
+$ TotalDue                      <dbl> 23153.234, 23153.234, 23153.234, 23153..
+$ Comment                       <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SalesOrderHeader_rowguid      <chr> "79B65321-39CA-4115-9CBA-8FE0903E12E6",.
+$ SalesOrderHeader_ModifiedDate <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 20.
+$ SalesOrderDetailID            <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, .
+$ CarrierTrackingNumber         <chr> "4911-403C-98", "4911-403C-98", "4911-4.
+$ OrderQty                      <int> 1, 3, 1, 1, 1, 2, 1, 3, 1, 6, 2, 4, 1, .
+$ ProductID                     <int> 776, 777, 778, 771, 772, 773, 774, 714,.
+$ SpecialOfferID                <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, .
+$ UnitPrice                     <dbl> 2024.9940, 2024.9940, 2024.9940, 2039.9.
+$ UnitPriceDiscount             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .
+$ LineTotal                     <dbl> 2024.9940, 6074.9820, 2024.9940, 2039.9.
+$ SalesOrderDetail_rowguid      <chr> "B207C96D-D9E6-402B-8470-2CC176C42283",.
+$ SalesOrderDetail_ModifiedDate <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+$ Product_Name                  <chr> "Mountain-100 Black, 42", "Mountain-100.
+$ ProductNumber                 <chr> "BK-M82B-42", "BK-M82B-44", "BK-M82B-48.
+$ MakeFlag                      <lgl> TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRU.
+$ FinishedGoodsFlag             <lgl> TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRU.
+$ Color                         <chr> "Black", "Black", "Black", "Silver", "S.
+$ SafetyStockLevel              <int> 100, 100, 100, 100, 100, 100, 100, 4, 4.
+$ ReorderPoint                  <int> 75, 75, 75, 75, 75, 75, 75, 3, 3, 3, 3,.
+$ StandardCost                  <dbl> 1898.0944, 1898.0944, 1898.0944, 1912.1.
+$ ListPrice                     <dbl> 3374.99, 3374.99, 3374.99, 3399.99, 339.
+$ Size                          <chr> "42", "44", "48", "38", "42", "44", "48.
+$ SizeUnitMeasureCode           <chr> "CM ", "CM ", "CM ", "CM ", "CM ", "CM .
+$ WeightUnitMeasureCode         <chr> "LB ", "LB ", "LB ", "LB ", "LB ", "LB .
+$ Weight                        <dbl> 20.77, 21.13, 21.42, 20.35, 20.77, 21.1.
+$ DaysToManufacture             <int> 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 4, .
+$ ProductLine                   <chr> "M ", "M ", "M ", "M ", "M ", "M ", "M .
+$ Class                         <chr> "H ", "H ", "H ", "H ", "H ", "H ", "H .
+$ Style                         <chr> "U ", "U ", "U ", "U ", "U ", "U ", "U .
+$ ProductSubcategoryID          <int> 1, 1, 1, 1, 1, 1, 1, 21, 21, 23, 19, 31.
+$ ProductModelID                <int> 19, 19, 19, 19, 19, 19, 19, 11, 11, 18,.
+$ SellStartDate                 <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+$ SellEndDate                   <dttm> 2012-05-29, 2012-05-29, 2012-05-29, 20.
+$ DiscontinuedDate              <dttm> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA.
+$ SalesTerritory_Name           <chr> "Southeast", "Southeast", "Southeast", .
+$ CountryRegionCode             <chr> "US", "US", "US", "US", "US", "US", "US.
+$ Group                         <chr> "North America", "North America", "Nort.
+$ SalesYTD                      <dbl> 2538667, 2538667, 2538667, 2538667, 253.
+$ SalesLastYear                 <dbl> 3925071, 3925071, 3925071, 3925071, 392.
+$ CostYTD                       <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .
+$ CostLastYear                  <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .
+
+Joining, by = "TerritoryID"
+
+Observations: 121,317
+Variables: 36
+$ SalesOrderID                  <int> 43659, 43659, 43659, 43659, 43659, 4365.
+$ RevisionNumber                <int> 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, .
+$ OrderDate                     <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+$ DueDate                       <dttm> 2011-06-12, 2011-06-12, 2011-06-12, 20.
+$ ShipDate                      <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 20.
+$ Status                        <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ OnlineOrderFlag               <lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALS.
+$ SalesOrderNumber              <chr> "SO43659", "SO43659", "SO43659", "SO436.
+$ PurchaseOrderNumber           <chr> "PO522145787", "PO522145787", "PO522145.
+$ AccountNumber                 <chr> "10-4020-000676", "10-4020-000676", "10.
+$ CustomerID                    <int> 29825, 29825, 29825, 29825, 29825, 2982.
+$ SalesPersonID                 <int> 279, 279, 279, 279, 279, 279, 279, 279,.
+$ TerritoryID                   <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ BillToAddressID               <int> 985, 985, 985, 985, 985, 985, 985, 985,.
+$ ShipToAddressID               <int> 985, 985, 985, 985, 985, 985, 985, 985,.
+$ ShipMethodID                  <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ CreditCardID                  <int> 16281, 16281, 16281, 16281, 16281, 1628.
+$ CreditCardApprovalCode        <chr> "105041Vi84182", "105041Vi84182", "1050.
+$ CurrencyRateID                <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SubTotal                      <dbl> 20565.621, 20565.621, 20565.621, 20565..
+$ TaxAmt                        <dbl> 1971.5149, 1971.5149, 1971.5149, 1971.5.
+$ Freight                       <dbl> 616.0984, 616.0984, 616.0984, 616.0984,.
+$ TotalDue                      <dbl> 23153.234, 23153.234, 23153.234, 23153..
+$ Comment                       <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SalesOrderHeader_rowguid      <chr> "79B65321-39CA-4115-9CBA-8FE0903E12E6",.
+$ SalesOrderHeader_ModifiedDate <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 20.
+$ SalesOrderDetailID            <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, .
+$ CarrierTrackingNumber         <chr> "4911-403C-98", "4911-403C-98", "4911-4.
+$ OrderQty                      <int> 1, 3, 1, 1, 1, 2, 1, 3, 1, 6, 2, 4, 1, .
+$ ProductID                     <int> 776, 777, 778, 771, 772, 773, 774, 714,.
+$ SpecialOfferID                <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, .
+$ UnitPrice                     <dbl> 2024.9940, 2024.9940, 2024.9940, 2039.9.
+$ UnitPriceDiscount             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .
+$ LineTotal                     <dbl> 2024.9940, 6074.9820, 2024.9940, 2039.9.
+$ SalesOrderDetail_rowguid      <chr> "B207C96D-D9E6-402B-8470-2CC176C42283",.
+$ SalesOrderDetail_ModifiedDate <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+
+Joining, by = "TerritoryID"
+
+Observations: 60,153
+Variables: 36
+$ SalesOrderID                  <int> 43659, 43659, 43659, 43659, 43659, 4365.
+$ RevisionNumber                <int> 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, .
+$ OrderDate                     <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+$ DueDate                       <dttm> 2011-06-12, 2011-06-12, 2011-06-12, 20.
+$ ShipDate                      <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 20.
+$ Status                        <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ OnlineOrderFlag               <lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALS.
+$ SalesOrderNumber              <chr> "SO43659", "SO43659", "SO43659", "SO436.
+$ PurchaseOrderNumber           <chr> "PO522145787", "PO522145787", "PO522145.
+$ AccountNumber                 <chr> "10-4020-000676", "10-4020-000676", "10.
+$ CustomerID                    <int> 29825, 29825, 29825, 29825, 29825, 2982.
+$ SalesPersonID                 <int> 279, 279, 279, 279, 279, 279, 279, 279,.
+$ TerritoryID                   <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ BillToAddressID               <int> 985, 985, 985, 985, 985, 985, 985, 985,.
+$ ShipToAddressID               <int> 985, 985, 985, 985, 985, 985, 985, 985,.
+$ ShipMethodID                  <int> 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, .
+$ CreditCardID                  <int> 16281, 16281, 16281, 16281, 16281, 1628.
+$ CreditCardApprovalCode        <chr> "105041Vi84182", "105041Vi84182", "1050.
+$ CurrencyRateID                <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SubTotal                      <dbl> 20565.6206, 20565.6206, 20565.6206, 205.
+$ TaxAmt                        <dbl> 1971.5149, 1971.5149, 1971.5149, 1971.5.
+$ Freight                       <dbl> 616.0984, 616.0984, 616.0984, 616.0984,.
+$ TotalDue                      <dbl> 23153.2339, 23153.2339, 23153.2339, 231.
+$ Comment                       <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,.
+$ SalesOrderHeader_rowguid      <chr> "79B65321-39CA-4115-9CBA-8FE0903E12E6",.
+$ SalesOrderHeader_ModifiedDate <dttm> 2011-06-07, 2011-06-07, 2011-06-07, 20.
+$ SalesOrderDetailID            <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, .
+$ CarrierTrackingNumber         <chr> "4911-403C-98", "4911-403C-98", "4911-4.
+$ OrderQty                      <int> 1, 3, 1, 1, 1, 2, 1, 3, 1, 6, 2, 4, 1, .
+$ ProductID                     <int> 776, 777, 778, 771, 772, 773, 774, 714,.
+$ SpecialOfferID                <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, .
+$ UnitPrice                     <dbl> 2024.9940, 2024.9940, 2024.9940, 2039.9.
+$ UnitPriceDiscount             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .
+$ LineTotal                     <dbl> 2024.9940, 6074.9820, 2024.9940, 2039.9.
+$ SalesOrderDetail_rowguid      <chr> "B207C96D-D9E6-402B-8470-2CC176C42283",.
+$ SalesOrderDetail_ModifiedDate <dttm> 2011-05-31, 2011-05-31, 2011-05-31, 20.
+
+  SalesOrderID   RevisionNumber    OrderDate                  
+ Min.   :43659   Min.   :8.000   Min.   :2011-05-31 00:00:00  
+ 1st Qu.:49884   1st Qu.:8.000   1st Qu.:2013-02-28 00:00:00  
+ Median :57029   Median :8.000   Median :2013-09-30 00:00:00  
+ Mean   :57827   Mean   :8.001   Mean   :2013-07-15 19:44:52  
+ 3rd Qu.:65490   3rd Qu.:8.000   3rd Qu.:2014-01-31 00:00:00  
+ Max.   :75123   Max.   :9.000   Max.   :2014-06-30 00:00:00  
+                                                              
+    DueDate                       ShipDate                       Status 
+ Min.   :2011-06-12 00:00:00   Min.   :2011-06-07 00:00:00   Min.   :5  
+ 1st Qu.:2013-03-12 00:00:00   1st Qu.:2013-03-07 00:00:00   1st Qu.:5  
+ Median :2013-10-12 00:00:00   Median :2013-10-07 00:00:00   Median :5  
+ Mean   :2013-07-27 19:45:12   Mean   :2013-07-22 19:45:12   Mean   :5  
+ 3rd Qu.:2014-02-12 00:00:00   3rd Qu.:2014-02-07 00:00:00   3rd Qu.:5  
+ Max.   :2014-07-12 00:00:00   Max.   :2014-07-07 00:00:00   Max.   :5  
+                                                                        
+ OnlineOrderFlag SalesOrderNumber   PurchaseOrderNumber AccountNumber     
+ Mode :logical   Length:121317      Length:121317       Length:121317     
+ FALSE:60919     Class :character   Class :character    Class :character  
+ TRUE :60398     Mode  :character   Mode  :character    Mode  :character  
+                                                                          
+                                                                          
+                                                                          
+                                                                          
+   CustomerID    SalesPersonID    TerritoryID     BillToAddressID
+ Min.   :11000   Min.   :274.0   Min.   : 1.000   Min.   :  405  
+ 1st Qu.:18177   1st Qu.:277.0   1st Qu.: 4.000   1st Qu.:  760  
+ Median :29485   Median :279.0   Median : 6.000   Median : 1104  
+ Mean   :24346   Mean   :280.8   Mean   : 5.411   Mean   :10666  
+ 3rd Qu.:29795   3rd Qu.:284.0   3rd Qu.: 8.000   3rd Qu.:20708  
+ Max.   :30118   Max.   :290.0   Max.   :10.000   Max.   :29883  
+                 NA's   :60398                                   
+ ShipToAddressID  ShipMethodID    CreditCardID   CreditCardApprovalCode
+ Min.   :    9   Min.   :1.000   Min.   :    1   Length:121317         
+ 1st Qu.:  756   1st Qu.:1.000   1st Qu.: 5063   Class :character      
+ Median :11380   Median :5.000   Median :10057   Mode  :character      
+ Mean   :10685   Mean   :3.009   Mean   : 9806                         
+ 3rd Qu.:20700   3rd Qu.:5.000   3rd Qu.:14814                         
+ Max.   :29883   Max.   :5.000   Max.   :19237                         
+                                 NA's   :2573                          
+ CurrencyRateID     SubTotal             TaxAmt            Freight        
+ Min.   :    2   Min.   :     1.37   Min.   :    0.11   Min.   :   0.034  
+ 1st Qu.: 8449   1st Qu.:   564.48   1st Qu.:   45.24   1st Qu.:  14.137  
+ Median : 9931   Median :  2518.98   Median :  205.19   Median :  64.123  
+ Mean   : 9237   Mean   : 21402.36   Mean   : 2075.63   Mean   : 648.635  
+ 3rd Qu.:11185   3rd Qu.: 37202.78   3rd Qu.: 3598.31   3rd Qu.:1124.472  
+ Max.   :12431   Max.   :163930.39   Max.   :17948.52   Max.   :5608.912  
+ NA's   :75284                                                            
+    TotalDue           Comment          SalesOrderHeader_rowguid
+ Min.   :     1.52   Length:121317      Length:121317           
+ 1st Qu.:   623.75   Class :character   Class :character        
+ Median :  2785.52   Mode  :character   Mode  :character        
+ Mean   : 24126.63                                              
+ 3rd Qu.: 41890.97                                              
+ Max.   :187487.83                                              
+                                                                
+ SalesOrderHeader_ModifiedDate SalesOrderDetailID CarrierTrackingNumber
+ Min.   :2011-06-07 00:00:00   Min.   :     1     Length:121317        
+ 1st Qu.:2013-03-07 00:00:00   1st Qu.: 30330     Class :character     
+ Median :2013-10-07 00:00:00   Median : 60659     Mode  :character     
+ Mean   :2013-07-22 19:45:12   Mean   : 60659                          
+ 3rd Qu.:2014-02-07 00:00:00   3rd Qu.: 90988                          
+ Max.   :2014-07-07 00:00:00   Max.   :121317                          
+                                                                       
+    OrderQty        ProductID     SpecialOfferID     UnitPrice       
+ Min.   : 1.000   Min.   :707.0   Min.   : 1.000   Min.   :   1.328  
+ 1st Qu.: 1.000   1st Qu.:768.0   1st Qu.: 1.000   1st Qu.:  21.490  
+ Median : 1.000   Median :863.0   Median : 1.000   Median :  49.990  
+ Mean   : 2.266   Mean   :841.7   Mean   : 1.163   Mean   : 465.093  
+ 3rd Qu.: 3.000   3rd Qu.:921.0   3rd Qu.: 1.000   3rd Qu.: 602.346  
+ Max.   :44.000   Max.   :999.0   Max.   :16.000   Max.   :3578.270  
+                                                                     
+ UnitPriceDiscount    LineTotal         SalesOrderDetail_rowguid
+ Min.   :0.000000   Min.   :    1.374   Length:121317           
+ 1st Qu.:0.000000   1st Qu.:   24.990   Class :character        
+ Median :0.000000   Median :  134.982   Mode  :character        
+ Mean   :0.002826   Mean   :  905.449                           
+ 3rd Qu.:0.000000   3rd Qu.: 1120.490                           
+ Max.   :0.400000   Max.   :27893.619                           
+                                                                
+ SalesOrderDetail_ModifiedDate
+ Min.   :2011-05-31 00:00:00  
+ 1st Qu.:2013-02-28 00:00:00  
+ Median :2013-09-30 00:00:00  
+ Mean   :2013-07-15 19:44:52  
+ 3rd Qu.:2014-01-31 00:00:00  
+ Max.   :2014-06-30 00:00:00  
+                              
+
+    '1.3282' '1.374' '2.29' '2.495' '2.7445' '2.8942' '2.994' '3.975' '3.99' '4.3221' '4.3725' '4.495' '4.611' '4.75' '4.7543' '4.77' '4.9445' '4.99' '5.0136' '5.1865' '5.2142' '5.225' '5.394' '5.51' '5.7' '7.95' '8.99' '9.99' '11.5942' '11.7392' '11.994' '12.144' '12.9515' '13.4695' '13.6579' '14.1289' '14.2042' '14.5' '14.694' '15' '15.7296' '15.7455' '16.272' '16.8221' '17.0955' '18.5043' '18.995' '19.2445' '19.5136' '20.1865' '20.2942' '20.52' '20.8945' '20.994' '21.49' '21.98' '22.0342' '22.7012' '22.794' '23.484' '24.0337' '24.294' '24.2945' '24.49' '24.497' '24.6935' '24.99' '25.8332' '26.437' '26.724' '26.995' '27.4945' '27.654' '27.879' '28.8404' '28.99' '28.9942' '29.6945' '29.99' '29.994' '30.2445' '31.3142' '31.4955' '31.584' '31.75' '31.8942' '32.394' '32.6' '32.6487' '32.994' '32.9945' '33.7745' '34.7942' '34.925' '34.99' '34.995' '35' '35.2321' '35.9136' '35.994' '36.447' '36.83' '37.152' '37.254' '37.495' '38.1' '38.4945' '38.9935' '40.5942' '41.2445' '41.994' '43.4942' '44.994' '46.9742' '48.594' '48.7435' '49.4945' '49.99' '52.1942' '52.647' '53.0642' '53.99' '53.994' '54.894' '54.942' '54.99' '56.2595' '58.4935' '59.3282' '60' '61.374' '61.77' '63.5' '63.9' '65.6018' '66' '67.539' '69.6' '69.99' '72' '72.162' '72.876' '72.894' '74.838' '83.2981' '88.932' '105.294' '112.998' '120' '125.415' '129.8138' '133.1042' '136.8945' '137.694' '141.615' '144.8782' '149.031' '149.874' '153.149' '153.894' '158.43' '159' '165.231' '174.6585' '177.8069' '178.5808' '179.9683' '180.129' '183.381' '183.8049' '183.9382' '189.7847' '193.3836' '195.5876' '196.329' '198.036' '200.052' '202.2808' '202.332' '209.256' '211.1722' '214.236' '218.454' '234.8942' '234.897' '242.994' '249.5428' '258.0824' '264.2244' '296.9945' '313.1942' '313.6376' '323.994' '324.4527' '327.1565' '334.0575' '338.994' '356.898' '405.477' '408.2925' '419.4589' '430.563' '430.6445' '445.41' '446.3042' '454.1342' '461.694' '469.794' '539.99' '550.2406' '552.1505' '563.7528' '564.99' '580.2538' '582.2678' '600.2625' '602.346' '626.3942' '647.994' '649.8842' '668.1675' '672.294' '699.0982' '704.613' '714.7043' '722.5949' '728.91' '736.1455' '742.35' '744.2727' '758.0759' '769.49' '780.8182' '782.99' '791.41' '809.76' '818.7' '843.7475' '845.6342' '849.9975' '850.495' '858.9' '874.794' '935.5445' '953.628' '986.5742' '1000.4375' '1020.594' '1120.49' '1127.004' '1188.477' '1192.035' '1201.4234' '1214.85' '1229.4589' '1242.8518' '1262.2445' '1265.3063' '1275.9945' '1308.9375' '1311.2385' '1331.0942' '1343.8425' '1345.5942' '1376.994' '1382.7606' '1391.994' '1417.143' '1430.442' '1466.01' '1700.99' '1759.212' '1957.4942' '1971.9942' '2024.994' '2039.994' '2049.0982' '2071.4196' '2146.962' '2181.5625' '2294.99' '2319.99' '2384.07' '2443.35' '3374.99' '3399.99' '3578.27' 
+
+A data.frame: 10 × 1 UnitPrice
+<fct>
+2024.994
+2039.994
+28.8404
+5.7
+5.1865
+20.1865
+419.4589
+874.794
+809.76
+714.7043
+
+    'SalesOrderID' 'RevisionNumber' 'OrderDate' 'DueDate' 'ShipDate' 'Status' 'OnlineOrderFlag' 'SalesOrderNumber' 'PurchaseOrderNumber' 'AccountNumber' 'CustomerID' 'SalesPersonID' 'TerritoryID' 'BillToAddressID' 'ShipToAddressID' 'ShipMethodID' 'CreditCardID' 'CreditCardApprovalCode' 'CurrencyRateID' 'SubTotal' 'TaxAmt' 'Freight' 'TotalDue' 'Comment' 'SalesOrderHeader_rowguid' 'SalesOrderHeader_ModifiedDate' 'SalesOrderDetailID' 'CarrierTrackingNumber' 'OrderQty' 'ProductID' 'SpecialOfferID' 'UnitPrice' 'UnitPriceDiscount' 'LineTotal' 'SalesOrderDetail_rowguid' 'SalesOrderDetail_ModifiedDate' 
+
+ Factor w/ 287 levels "1.3282","1.374",..: 275 275 275 276 276 276 276 75 75 25 ...
+ num [1:121317] 616 616 616 616 616 ...
+
+
+# Chart 1
+# chart 1 - Freight vs Order Quanitity
+
+top_unit_p <- df_sales_order$UnitPrice %>%
+
+head(10)
+# scatterplot graph of freight vs order quantity using linear model
+chart_1_title <- c("  Freight vs Order Quanitity  ")
+
+chart_1_title %>% print()
+
+str_trim(chart_1_title)
+
+df_sales_order %>% ggplot(aes(x=Freight, y=OrderQty)) + 
+
+   geom_jitter(alpha = 0.08) + 
+
+   geom_smooth(method = lm, se = FALSE) +
+
+   theme_classic() +
+
+   labs(title= chart_1_title,
+
+       subtitle="   Custom Jitter")
+
+[1] "  Freight vs Order Quanitity  "
+
+
+
+'Freight vs Order Quanitity'
+Chart 2
+
+# chart 2 - Total Due vs Tax Amount
+# scatter plot of total due vs tax amount using linear model
+
+df_sales_order %>% ggplot(aes(x=TotalDue, y=TaxAmt)) + 
+
+    geom_jitter(alpha = 0.2) + 
+
+    geom_smooth(method = lm, se = FALSE) +
+
+    theme_classic() +
+
+    labs(title="Total Due vs Tax Amount",
+
+     subtitle="Custom Jitter")
+
+
+
+Chart 3
+
+Optionally double click to edit this text to describe this chart.
+
+# chart 3 -Tax Amount vs Sub Total
+# scatter plot tax amount vs sub total using linear model, color assigned to taxamt
+
+df_sales_order %>% ggplot(aes(x=SubTotal, y=TaxAmt, color = TaxAmt)) + 
+
+   geom_jitter(alpha = 0.05) + 
+
+   geom_smooth(method = lm, se = FALSE) +
+
+   theme_classic() +
+
+   labs(title="Tax Amount vs Sub Total",
+
+       subtitle="Custom Jitter")
+
+# Close SQL connection
+
+# conn %>% dbDisconnect()
+
+Analysis and Conclusions
+
+In Chart 1
+
+    Freight vs Order Quanitity - Order quantity is assigned to the y-axis,
+    with freight to the x-axis. The linear trendline shows a positive 
+    correlation between order quanity and freight. This analysis asserts 
+    the conclusion that freight levels with rise with higher order quanitities. 
+    As order quantities increase, more freight is required.
+
+In Chart 2
+
+    Total Due vs Tax Amount - Tax amount is assigned to the y-axis,
+    with total due to the x-axis. The linear trendline shows a positive
+    correlation between the tax amount and the total due. Unsurprisingly, 
+    this analysis asserts the conclusion that tax amounts rise with a 
+    rising total due.
+
+In Chart 3
+
+    Tax Amount vs Sub Total - Tax amount is assigned to the y-axis,
+    with sub total to the x-axis. The linear trendline shows a positive
+    correlation between the tax amount and the sub total. 
+    Unsurprisingly, this analysis asserts the conclusion that tax 
+    amounts rise with a rising sub total.
+
