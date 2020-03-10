@@ -1,0 +1,854 @@
+
+# Jupyter Notebook
+# L03-Assignment Last Checkpoint: 12/02/2019 (autosaved) [R 3.5.1]
+
+# Analyze the sales of houses. 
+# R features: 
+
+as.factor()
+as.integer()
+as.double()
+labs()
+%>% pipe
+# Map data to color
+# A chart includes a categorical variable
+
+# Datasets: house_listings
+# Load libraries
+
+library(tidyverse)
+
+# House Listings
+# city: Name of MLS area
+# sales: Number of sales
+# volume: Total value of sales
+# median: Median sale price
+# listings: Total active listings
+# inventory: "Months inventory": amount of time it would take to sell all current listings at current pace of sales.
+
+# Explore data structure
+# Data: house_listings
+
+load("house_listings.RData")
+house_listings %>% glimpse()
+
+Observations: 1,000
+Variables: 8
+$ city      <chr> "Montgomery County", "Lubbock", "Corpus Christi", "Lufkin",.
+$ year      <chr> "2008", "2014", "2002", "2013", "2012", "2006", "2008", "20.
+$ month     <chr> "7", "1", "11", "4", "12", "12", "4", "2", "7", "7", "4", ".
+$ sales     <chr> "655", "221", "275", "73", "563", "87", "164", "499", "152".
+$ volume    <chr> "164320930", "33705478", "31335000", "11580743", "118842450.
+$ median    <chr> "175500", "124300", "95600", "141200", "177500", "99300", ".
+$ listings  <chr> "4099", "774", "1530", "404", "1546", "309", "976", "2377",.
+$ inventory <chr> "6.8", "2.3", "4.9", "8.5", "2.4", "3.7", "7.1", "3.9", "6..
+
+# Data processing
+# Create a new data frame(s) with appropriate data
+# types and data cleaning for the data.
+# Explore data structure
+
+# Data: house_listings
+load("house_listings.RData")
+house_listings %>% glimpse()
+
+# retrieve sales and inventory columns and convert to factor for analysis
+house_listings$sales %>% as.factor() %>% summary()
+house_listings$inventory %>% as.factor() %>% summary()
+
+# view factor levels with levels()
+levels(house_listings$sales)
+levels(house_listings$inventory)
+
+house_listings %>% glimpse()
+
+
+# change the column types with mutate() to factor
+# The function factor is used to encode a vector as a factor
+# This function converts a variable 
+# into a factor, but preserves variable and value label attributes. 
+house_listings <- house_listings %>%
+  mutate(year = as.factor(year),
+  month = as.factor(month),
+  sales = as.factor(sales),
+  volume = as.factor(volume),
+  listings = as.factor(listings),
+  median = as.factor(median),
+  inventory = as.factor(inventory))
+
+house_listings %>% glimpse()
+
+# generate a summary of house_listings
+# summary is a generic function used to produce
+# result summaries of the results of various model fitting functions. 
+# The function invokes particular methods which depend on the 
+# class of the first argument.
+
+# change data types on variables and save these
+# changes in the house_listings data set
+# use mutate to change data types to double or integer as needed
+summary(house_listings)
+
+house_listings <- house_listings %>%
+
+    mutate(sales = as.double(sales),
+
+            inventory = as.double(inventory),
+
+               median = as.integer(median),
+
+               volume = as.integer(volume),
+
+               year = as.integer(year),
+
+               month = as.integer(month),
+
+               listings = as.integer(listings))
+
+
+# ensure the data type changes have been made
+house_listings %>% glimpse()
+
+# clean data
+# drop NA values
+house_listings <- drop_na(house_listings)
+glimpse(house_listings)
+summary(house_listings)
+
+# an attempt to rename some of the varaibles to more descriptive names
+# save the new names in the house_listings data frame
+# house_listings <- house_listings %>% rename(num_of_sales = "sales", val_of_sales = "volume", months_inventory = "inventory")
+# print(house_listings)
+
+# get complete set of parsing failures
+problems(df_csv)
+
+# an effort to view the full dataframe that is not 
+# available in Jupyter notebooks yet
+#  View() 
+
+Observations: 1,000
+Variables: 8
+$ city      <chr> "Montgomery County", "Lubbock", "Corpus Christi", "Lufkin",.
+$ year      <chr> "2008", "2014", "2002", "2013", "2012", "2006", "2008", "20.
+$ month     <chr> "7", "1", "11", "4", "12", "12", "4", "2", "7", "7", "4", ".
+$ sales     <chr> "655", "221", "275", "73", "563", "87", "164", "499", "152".
+$ volume    <chr> "164320930", "33705478", "31335000", "11580743", "118842450.
+$ median    <chr> "175500", "124300", "95600", "141200", "177500", "99300", ".
+$ listings  <chr> "4099", "774", "1530", "404", "1546", "309", "976", "2377",.
+$ inventory <chr> "6.8", "2.3", "4.9", "8.5", "2.4", "3.7", "7.1", "3.9", "6..
+
+87
+10
+68
+9
+43
+8
+64
+8
+70
+7
+74
+7
+175
+6
+50
+6
+56
+6
+58
+6
+63
+6
+69
+6
+75
+6
+84
+6
+95
+6
+98
+6
+116
+5
+121
+5
+135
+5
+137
+5
+144
+5
+145
+5
+153
+5
+164
+5
+165
+5
+32
+5
+34
+5
+37
+5
+65
+5
+82
+5
+85
+5
+89
+5
+97
+5
+102
+4
+108
+4
+122
+4
+138
+4
+142
+4
+148
+4
+159
+4
+188
+4
+210
+4
+25
+4
+31
+4
+332
+4
+39
+4
+44
+4
+47
+4
+51
+4
+54
+4
+57
+4
+66
+4
+71
+4
+73
+4
+76
+4
+77
+4
+83
+4
+93
+4
+101
+3
+104
+3
+105
+3
+106
+3
+107
+3
+110
+3
+113
+3
+114
+3
+120
+3
+123
+3
+128
+3
+130
+3
+132
+3
+139
+3
+140
+3
+141
+3
+147
+3
+149
+3
+150
+3
+156
+3
+166
+3
+170
+3
+177
+3
+198
+3
+201
+3
+206
+3
+228
+3
+246
+3
+250
+3
+26
+3
+289
+3
+30
+3
+323
+3
+324
+3
+36
+3
+40
+3
+41
+3
+45
+3
+46
+3
+466
+3
+(Other)
+520
+NA's
+    66
+
+6
+    23
+6.9
+    19
+6.2
+    18
+6.4
+    18
+4.7
+    17
+6.3
+    17
+6.5
+    17
+5.7
+    16
+6.6
+    16
+4.8
+    14
+4.9
+    14
+5.1
+    14
+5.2
+    14
+6.7
+    14
+5.4
+    13
+7.9
+    13
+4.2
+    12
+5.3
+    12
+5.9
+    12
+7.2
+    12
+4.3
+    11
+4.4
+    11
+4.5
+    11
+4.6
+    11
+5.5
+    11
+5.6
+    11
+7.3
+    11
+4
+    10
+5.8
+    10
+7.4
+    10
+7.5
+    10
+7.6
+    10
+2.1
+    9
+3.9
+    9
+5
+    9
+6.1
+    9
+7.1
+    9
+7.7
+    9
+3.8
+    8
+6.8
+    8
+7
+    8
+9.3
+    8
+1.7
+    7
+3.7
+    7
+8.2
+    7
+8.4
+    7
+8.5
+    7
+9.2
+    7
+9.8
+    7
+10.8
+    6
+2.2
+    6
+2.3
+    6
+2.8
+    6
+3.3
+    6
+4.1
+    6
+8.7
+    6
+9.5
+    6
+2
+    5
+3.5
+    5
+7.8
+    5
+8.1
+    5
+8.3
+    5
+8.9
+    5
+9.1
+    5
+9.4
+    5
+9.7
+    5
+10.2
+    4
+10.4
+    4
+2.4
+    4
+2.6
+    4
+2.9
+    4
+3.2
+    4
+8
+    4
+8.8
+    4
+9
+    4
+1.4
+    3
+1.6
+    3
+1.8
+    3
+1.9
+    3
+10.3
+    3
+12.5
+    3
+12.8
+    3
+13.3
+    3
+2.5
+    3
+3
+    3
+3.4
+    3
+3.6
+    3
+9.6
+    3
+9.9
+    3
+10.1
+    2
+10.5
+    2
+10.6
+    2
+10.7
+    2
+10.9
+    2
+11.1
+    2
+11.2
+    2
+11.7
+    2
+12
+    2
+(Other)
+    70
+NA's
+174
+
+NULL
+
+NULL
+
+Observations: 1,000
+Variables: 8
+$ city      <chr> "Montgomery County", "Lubbock", "Corpus Christi", "Lufkin",.
+$ year      <chr> "2008", "2014", "2002", "2013", "2012", "2006", "2008", "20.
+$ month     <chr> "7", "1", "11", "4", "12", "12", "4", "2", "7", "7", "4", ".
+$ sales     <chr> "655", "221", "275", "73", "563", "87", "164", "499", "152".
+$ volume    <chr> "164320930", "33705478", "31335000", "11580743", "118842450.
+$ median    <chr> "175500", "124300", "95600", "141200", "177500", "99300", ".
+$ listings  <chr> "4099", "774", "1530", "404", "1546", "309", "976", "2377",.
+$ inventory <chr> "6.8", "2.3", "4.9", "8.5", "2.4", "3.7", "7.1", "3.9", "6..
+Observations: 1,000
+Variables: 8
+$ city      <chr> "Montgomery County", "Lubbock", "Corpus Christi", "Lufkin",.
+$ year      <chr> "2008", "2014", "2002", "2013", "2012", "2006", "2008", "20.
+$ month     <chr> "7", "1", "11", "4", "12", "12", "4", "2", "7", "7", "4", ".
+$ sales     <chr> "655", "221", "275", "73", "563", "87", "164", "499", "152".
+$ volume    <chr> "164320930", "33705478", "31335000", "11580743", "118842450.
+$ median    <chr> "175500", "124300", "95600", "141200", "177500", "99300", ".
+$ listings  <chr> "4099", "774", "1530", "404", "1546", "309", "976", "2377",.
+$ inventory <chr> "6.8", "2.3", "4.9", "8.5", "2.4", "3.7", "7.1", "3.9", "6..
+
+city               year              month              sales          
+Length:1000        Length:1000        Length:1000        Length:1000       
+Class :character   Class :character   Class :character   Class :character  
+Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+volume             median            listings          inventory        
+Length:1000        Length:1000        Length:1000        Length:1000       
+Class :character   Class :character   Class :character   Class :character  
+Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+
+Warning message:
+  "NAs introduced by coercion to integer range"
+
+Observations: 1,000
+Variables: 8
+$ city      <chr> "Montgomery County", "Lubbock", "Corpus Christi", "Lufkin",.
+$ year      <int> 2008, 2014, 2002, 2013, 2012, 2006, 2008, 2014, 2000, 2003,.
+$ month     <int> 7, 1, 11, 4, 12, 12, 4, 2, 7, 7, 4, 4, 3, 10, 3, 5, 12, 5, .
+$ sales     <dbl> 655, 221, 275, 73, 563, 87, 164, 499, 152, 606, 914, NA, 21.
+$ volume    <int> 164320930, 33705478, 31335000, 11580743, 118842450, 1105000.
+$ median    <int> 175500, 124300, 95600, 141200, 177500, 99300, 166200, 17280.
+$ listings  <int> 4099, 774, 1530, 404, 1546, 309, 976, 2377, 742, 3777, 5742.
+$ inventory <dbl> 6.8, 2.3, 4.9, 8.5, 2.4, 3.7, 7.1, 3.9, 6.2, 8.7, 6.0, NA, .
+Observations: 821
+Variables: 8
+$ city      <chr> "Montgomery County", "Lubbock", "Corpus Christi", "Lufkin",.
+$ year      <int> 2008, 2014, 2002, 2013, 2012, 2006, 2008, 2014, 2000, 2003,.
+$ month     <int> 7, 1, 11, 4, 12, 12, 4, 2, 7, 7, 4, 3, 10, 3, 5, 5, 2, 3, 6.
+$ sales     <dbl> 655, 221, 275, 73, 563, 87, 164, 499, 152, 606, 914, 210, 2.
+$ volume    <int> 164320930, 33705478, 31335000, 11580743, 118842450, 1105000.
+$ median    <int> 175500, 124300, 95600, 141200, 177500, 99300, 166200, 17280.
+$ listings  <int> 4099, 774, 1530, 404, 1546, 309, 976, 2377, 742, 3777, 5742.
+$ inventory <dbl> 6.8, 2.3, 4.9, 8.5, 2.4, 3.7, 7.1, 3.9, 6.2, 8.7, 6.0, 7.6,.
+
+city                year          month            sales       
+Length:821         Min.   :2000   Min.   : 1.000   Min.   :   6.0  
+Class :character   1st Qu.:2004   1st Qu.: 3.000   1st Qu.:  95.0  
+Mode  :character   Median :2008   Median : 6.000   Median : 183.0  
+Mean   :2008   Mean   : 6.313   Mean   : 588.5  
+3rd Qu.:2012   3rd Qu.: 9.000   3rd Qu.: 503.0  
+Max.   :2015   Max.   :12.000   Max.   :7935.0  
+volume              median          listings       inventory     
+Min.   :1.157e+06   Min.   : 55000   Min.   :  108   Min.   : 1.300  
+1st Qu.:1.223e+07   1st Qu.:101400   1st Qu.:  700   1st Qu.: 4.800  
+Median :2.622e+07   Median :128400   Median : 1280   Median : 6.300  
+Mean   :1.155e+08   Mean   :131747   Mean   : 3158   Mean   : 7.283  
+3rd Qu.:8.750e+07   3rd Qu.:153100   3rd Qu.: 2873   3rd Qu.: 8.100  
+Max.   :2.074e+09   Max.   :292600   Max.   :40486   Max.   :54.900  
+
+Error in withCallingHandlers(expr, warning = function(w) invokeRestart("muffleWarning")): object 'df_csv' not found
+Traceback:
+  
+  1. problems(df_csv)
+2. probs(x)
+3. suppressWarnings(x)
+4. withCallingHandlers(expr, warning = function(w) invokeRestart("muffleWarning"))
+
+Chart 1
+
+Examine how sales value and volume of sales differs by city
+
+# insight to be gained in charts: 
+# 1 - Examine how sales value and volume of sales differs by city 
+# 2 - Examine how median sales price differs by city 
+# 3 - Examine total active listings vs months of inventory 
+# Add jitter, alpha and trend lines
+
+
+#Chart 1 analysis: 
+# mapping x to volume, y to city, and color to sales. 
+# Some notable outliers are San Antonio, NE Tarrant County, Montgomery County, Houston,
+# Forth Worth, Fort Bend, Denton County, Dallas, Collin County, Bay Area, and Austin
+# These areas have both higher sales prices and volume than the other cities listed.
+# Houston, Dallas, San Antonio, and Collin County have especially high sales volume
+# These cities have higher populations and thus, a higher demand for housing 
+
+# An additional geom_point was added to investigate which cities
+# have the highest sales prices 
+# They are determined to be: San Antion, Houston, Dallas, Collin County, Austin. 
+# The top three cities with highest house prices are Houston, Dallas, 
+# and Austin, in descending order.
+
+house_listings %>% glimpse()
+
+# plot sales volume by city and assign color to sales.  Use linear model lm()
+house_listings %>%
+  
+  ggplot(aes(x = volume, y = city, color = sales)) +
+  
+  geom_jitter(alpha = 0.3) +
+  
+  geom_smooth(se = FALSE, method = "lm") +
+
+  labs(y = "city", x = "volume of sales", 
+       
+       title = "Volume of sales by city ", subtitle = "color mapped to sales value") 
+
+# use geom_point to illustrate sales value by city 
+house_listings %>% ggplot(mapping = aes(x = sales, y = city)) + 
+  
+  geom_point(color = "green")
+
+Observations: 821
+Variables: 8
+$ city      <chr> "Montgomery County", "Lubbock", "Corpus Christi", "Lufkin",.
+$ year      <int> 2008, 2014, 2002, 2013, 2012, 2006, 2008, 2014, 2000, 2003,.
+$ month     <int> 7, 1, 11, 4, 12, 12, 4, 2, 7, 7, 4, 3, 10, 3, 5, 5, 2, 3, 6.
+$ sales     <dbl> 655, 221, 275, 73, 563, 87, 164, 499, 152, 606, 914, 210, 2.
+$ volume    <int> 164320930, 33705478, 31335000, 11580743, 118842450, 1105000.
+$ median    <int> 175500, 124300, 95600, 141200, 177500, 99300, 166200, 17280.
+$ listings  <int> 4099, 774, 1530, 404, 1546, 309, 976, 2377, 742, 3777, 5742.
+$ inventory <dbl> 6.8, 2.3, 4.9, 8.5, 2.4, 3.7, 7.1, 3.9, 6.2, 8.7, 6.0, 7.6,.
+
+
+Chart 2
+
+Examine how house listings differ by city.
+
+ggplot(data = house_listings) +
+
+geom_bar(mapping = aes(x = listings, y = city), stat = "count")
+
+ggplot(data = house_listings) + 
+
+stat_count(mapping = aes(x = listings, y = city))
+
+
+# Chart 2 analysis:
+
+# Mapped median sales price to x and city to y using scatterplot & lm()
+# Some cities have wider median sales prices than others. 
+# The cities with wider median sales prices also include 
+# the highest median sales prices of all cities listed. 
+# Some of these cities include: South Padre Island, 
+# San Marcos, Fort Bend, Collin County, Montgomery County, Austin
+
+house_listings %>%
+  
+  ggplot(aes(x = median, y = city)) +
+  
+  geom_jitter(alpha = 0.3) +
+  
+  geom_smooth(se = FALSE, method = "lm") +
+  
+  labs(x = "median", y = "city",
+       
+       title = "Median Sale Price by City")   
+
+
+Chart 3
+
+# Examine total active listings by mapping listings to x and inventory to y. 
+
+# There is a negative linear correlation between inventory and listings, 
+
+# This suggests the higher the number of house listings, the higher the inventory 
+
+# (or number of months it will take to sell all listings)
+
+house_listings %>% glimpse()
+
+house_listings %>%
+  
+  ggplot(aes(x = listings, y = inventory)) +
+  
+  geom_jitter(alpha = 0.1) +
+  
+  geom_smooth(se = FALSE, method = "lm") +
+  
+  labs(title = "Current Listings vs Inventory - months to sell all current listings at pace of sales") 
+
+Observations: 821
+Variables: 8
+$ city      <chr> "Montgomery County", "Lubbock", "Corpus Christi", "Lufkin",.
+$ year      <int> 2008, 2014, 2002, 2013, 2012, 2006, 2008, 2014, 2000, 2003,.
+$ month     <int> 7, 1, 11, 4, 12, 12, 4, 2, 7, 7, 4, 3, 10, 3, 5, 5, 2, 3, 6.
+$ sales     <dbl> 655, 221, 275, 73, 563, 87, 164, 499, 152, 606, 914, 210, 2.
+$ volume    <int> 164320930, 33705478, 31335000, 11580743, 118842450, 1105000.
+$ median    <int> 175500, 124300, 95600, 141200, 177500, 99300, 166200, 17280.
+$ listings  <int> 4099, 774, 1530, 404, 1546, 309, 976, 2377, 742, 3777, 5742.
+$ inventory <dbl> 6.8, 2.3, 4.9, 8.5, 2.4, 3.7, 7.1, 3.9, 6.2, 8.7, 6.0, 7.6,.
+
+
+# Analysis and Conclusions
+# House_listings data was altered by converting numerical data values 
+# from character type to integer or double type, to better aid in analysis. 
+# NA values were removed.
+
+# In chart 1, how sales value and volume of sales differs by city 
+# was examined by mapping x to volume, y to city, and color to sales. 
+# Some notable outliers are San Antonio, NE Tarrant County, Montgomery County,
+# Houston, Forth Worth, Fort Bend, Denton County, Dallas, Collin County, Bay Area, 
+# and Austin. These areas have both higher sales prices and volume than
+# the other cities listed. Houston, Dalls, San Antonio, and Collin County
+# have especially high sales volume 
+# These cities have higher populations and thus, a higher demand for housing
+# An additional geom_point was added to investigate which cities have the
+# highest sales prices They are determined to be: San Antion, Houston, Dallas,
+# Collin County, Austin. The top three cities with highest house prices are
+# Houston, Dallas, and Austin, in descending order.
+
+
+# In chart 2, how median sales price differs by city was
+# examined by mapping median sales price to x and city to y. 
+# Some cities have wider median sales prices than others. 
+# The cities with wider median sales prices also include 
+# the highest median sales prices of all cities listed.
+# Some of these cities include: South Padre Island, San Marcos, 
+# Fort Bend, Collin County, Montgomery County, Austin.
+
+
+
+# In chart 3, total active listings vs months of inventory
+# was examined by by mapping listings to x and inventory to y.
+# There is a negative correlation between inventory and listings. 
+# This suggests the higher the number of house listings, the higher
+# the inventory (or number of months it will take to sell all listings).
+
+# Initial data processing workflow
+# saved for future reference
+# alternative method to prevent type info from being lost by write and read_csv
+# write_rds and read_rds store data in R's custom binary format called RDS:
+# Explore data structure
+# Data: house_listings
+load("house_listings.RData")
+house_listings %>% glimpse()
+
+# decided to treat house_listings as csv
+house_listings$sales %>% as.factor() %>% summary()
+house_listings$inventory %>% as.factor() %>% summary()
+
+# view factor levels with levels()
+levels(house_listings$sales)
+levels(house_listings$inventory)
+house_listings %>% glimpse()
+
+# change the column types with mutate() to factor
+# The function factor is used to encode a vector as a factor
+# house_listings <- house_listings %>%
+  mutate(year = as.factor(year),
+  month = as.factor(month),
+  sales = as.factor(sales),
+  volume = as.factor(volume),
+  listings = as.factor(listings),
+  median = as.factor(median),
+  inventory = as.factor(inventory))
+  house_listings %>% glimpse()
+
+# generate a summary of house_listings
+# summary is a generic function used to produce result 
+# summaries of the results of various model fitting functions. 
+# The function invokes particular methods which depend
+# on the class of the first argument.
+# change data types on variables and save these changes in the house_listings data set
+
+
+summary(house_listings)
+
+house_listings <- house_listings %>%
+  
+  mutate(sales = as.double(sales),
+         
+         inventory = as.double(inventory),
+         
+         median = as.integer(median),
+         
+         volume = as.integer(volume),
+         
+         year = as.integer(year),
+         
+         month = as.integer(month),
+         
+         listings = as.integer(listings))
+
+# ensure the data type changes have been made
+
+house_listings %>% glimpse()
+
+# drop NA values
+
+house_listings <- drop_na(house_listings)
+
+glimpse(house_listings)
+
+summary(house_listings)
+
+
+
