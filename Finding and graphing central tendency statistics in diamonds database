@@ -1,0 +1,605 @@
+ 
+L06-Assignment Last Checkpoint: 12/30/2019 (autosaved)  
+R 3.5.1 
+
+# R Features
+# •	central tendency statistic for all: mean, median, mode
+# •	a rank function (rank, dense_rank, row_number, etc.)
+# •	geom_histogram()
+# •	geom_density()
+# •	geom_violin()
+# •	geom_boxplot()
+# •	include geom_hline() of a central tendency measure in a plot
+# •	include geom_vline() of a central tendency measure in a plot
+# Dataset: diamonds
+ 
+# Load libraries
+#library(modeest) provides the mode (most common numbers in a set of values)
+
+library(tidyverse)
+library(modeest)
+ 
+# Explore data structure
+# Data: diamonds
+
+diamonds %>% glimpse()
+
+# Display help on data
+? diamonds
+
+#str(diamonds)
+# attempt to view diamonds data - not yet availabe in Jupyter kernel -View(diamonds)
+Observations: 53,940
+Variables: 10
+$ carat   <dbl> 0.23, 0.21, 0.23, 0.29, 0.31, 0.24, 0.24, 0.26, 0.22, 0.23, 0…
+$ cut     <ord> Ideal, Premium, Good, Premium, Good, Very Good, Very Good, Ve…
+$ color   <ord> E, E, E, I, J, J, I, H, E, H, J, J, F, J, E, E, I, J, J, J, I…
+$ clarity <ord> SI2, SI1, VS1, VS2, SI2, VVS2, VVS1, SI1, VS2, VS1, SI1, VS1,…
+$ depth   <dbl> 61.5, 59.8, 56.9, 62.4, 63.3, 62.8, 62.3, 61.9, 65.1, 59.4, 6…
+$ table   <dbl> 55, 61, 65, 58, 58, 57, 57, 55, 61, 61, 55, 56, 61, 54, 62, 5…
+$ price   <int> 326, 326, 327, 334, 335, 336, 336, 337, 337, 338, 339, 340, 3…
+$ x       <dbl> 3.95, 3.89, 4.05, 4.20, 4.34, 3.94, 3.95, 4.07, 3.87, 4.00, 4…
+$ y       <dbl> 3.98, 3.84, 4.07, 4.23, 4.35, 3.96, 3.98, 4.11, 3.78, 4.05, 4…
+$ z       <dbl> 2.43, 2.31, 2.31, 2.63, 2.75, 2.48, 2.47, 2.53, 2.49, 2.39, 2…
+Classes ‘tbl_df’, ‘tbl’ and 'data.frame':	53940 obs. of  10 variables:
+ $ carat  : num  0.23 0.21 0.23 0.29 0.31 0.24 0.24 0.26 0.22 0.23 ...
+ $ cut    : Ord.factor w/ 5 levels "Fair"<"Good"<..: 5 4 2 4 2 3 3 3 1 3 ...
+ $ color  : Ord.factor w/ 7 levels "D"<"E"<"F"<"G"<..: 2 2 2 6 7 7 6 5 2 5 ...
+ $ clarity: Ord.factor w/ 8 levels "I1"<"SI2"<"SI1"<..: 2 3 5 4 2 6 7 3 4 5 ...
+ $ depth  : num  61.5 59.8 56.9 62.4 63.3 62.8 62.3 61.9 65.1 59.4 ...
+ $ table  : num  55 61 65 58 58 57 57 55 61 61 ...
+ $ price  : int  326 326 327 334 335 336 336 337 337 338 ...
+ $ x      : num  3.95 3.89 4.05 4.2 4.34 3.94 3.95 4.07 3.87 4 ...
+ $ y      : num  3.98 3.84 4.07 4.23 4.35 3.96 3.98 4.11 3.78 4.05 ...
+ $ z      : num  2.43 2.31 2.31 2.63 2.75 2.48 2.47 2.53 2.49 2.39 ...
+Data processing
+Create a new data frame(s) with appropriate data types and data cleaning for the data.
+ 
+
+diamonds %>% summary()
+colnames(diamonds)
+     carat               cut        color        clarity          depth      
+ Min.   :0.2000   Fair     : 1610   D: 6775   SI1    :13065   Min.   :43.00  
+ 1st Qu.:0.4000   Good     : 4906   E: 9797   VS2    :12258   1st Qu.:61.00  
+ Median :0.7000   Very Good:12082   F: 9542   SI2    : 9194   Median :61.80  
+ Mean   :0.7979   Premium  :13791   G:11292   VS1    : 8171   Mean   :61.75  
+ 3rd Qu.:1.0400   Ideal    :21551   H: 8304   VVS2   : 5066   3rd Qu.:62.50  
+ Max.   :5.0100                     I: 5422   VVS1   : 3655   Max.   :79.00  
+                                    J: 2808   (Other): 2531                  
+     table           price             x                y         
+ Min.   :43.00   Min.   :  326   Min.   : 0.000   Min.   : 0.000  
+ 1st Qu.:56.00   1st Qu.:  950   1st Qu.: 4.710   1st Qu.: 4.720  
+ Median :57.00   Median : 2401   Median : 5.700   Median : 5.710  
+ Mean   :57.46   Mean   : 3933   Mean   : 5.731   Mean   : 5.735  
+ 3rd Qu.:59.00   3rd Qu.: 5324   3rd Qu.: 6.540   3rd Qu.: 6.540  
+ Max.   :95.00   Max.   :18823   Max.   :10.740   Max.   :58.900  
+                                                                  
+       z         
+ Min.   : 0.000  
+ 1st Qu.: 2.910  
+ Median : 3.530  
+ Mean   : 3.539  
+ 3rd Qu.: 4.040  
+ Max.   :31.800  
+                 
+1.	'carat'
+2.	'cut'
+3.	'color'
+4.	'clarity'
+5.	'depth'
+6.	'table'
+7.	'price'
+8.	'x'
+9.	'y'
+10.	'z'
+Central Tendency Statistics
+ 
+# CENTRAL TENDENCY STATISTICS FOR THE FACTORED VARIABLES: 
+# price, carat, depth, table
+ 
+# succinct summary for central tendency values of price, carats, and depth
+# price 
+diamonds %>%
+    summarise(mean = mean(price), sd = sd(price), median = median(price), mode = mfv(price))
+
+# carat
+diamonds %>%
+    summarise(mean = mean(carat), sd = sd(carat), median = median(carat), mode = mfv(carat))
+
+# depth
+diamonds %>%
+    summarise(mean = mean(depth), sd = sd(depth), median = median(depth), mode = mfv(depth)) 
+
+# table
+diamonds %>%
+    summarise(mean = mean(table), sd = sd(table), median = median(table), mode = mfv(table))
+
+# an alternative method of retrieving central tendency values of price, carats,and depth
+# using dfs and calling mean, median, and mode
+
+# price 
+
+df_price <- diamonds$price
+
+print("df_price mean:")
+df_price %>% mean()
+
+print("df_price median:")
+df_price %>% median()
+
+print("df_price mode:")
+df_price %>% mfv()
+
+# carat
+
+df_carat <- diamonds$carat
+
+print("df_carat mean:")
+df_carat %>% mean()
+
+print("df_carat median:")
+df_carat %>% median()
+
+print("df_carat mode:")
+df_carat %>% mfv()
+
+
+# depth
+
+df_depth <- diamonds$depth
+
+print("df_depth mean:")
+df_depth %>% mean()
+
+
+print("df_depth median:")
+df_depth %>% median()
+
+print("df_depth mode:")
+df_depth %>% mfv()
+
+
+# table
+df_table <- diamonds$table
+
+print("df_depth mean:")
+df_table %>% mean()
+
+
+print("df_depth median:")
+df_table %>% median()
+
+print("df_depth mode:")
+df_table %>% mfv()
+
+
+# STATISTICS FOR ORDERED FACTOR VARIABLES - cut, color, clarity
+# VISUALIZING CATEGORICAL VALUES
+
+# cut
+ggplot(data = diamonds, aes(x = cut)) +
+  geom_bar()
+
+diamonds %>%
+  group_by(cut) %>%
+  summarise(counts = n())
+
+diamonds %>%
+  group_by(cut) %>%
+  summarise(counts = n() / nrow(diamonds))
+
+
+# color
+ggplot(data = diamonds, aes(x = color)) +
+  geom_bar()
+
+diamonds %>%
+  group_by(color) %>%
+  summarise(counts = n())
+
+diamonds %>%
+  group_by(color) %>%
+  summarise(counts = n() / nrow(diamonds))
+
+
+
+# clarity
+ggplot(data = diamonds, aes(x = clarity)) +
+  geom_bar()
+
+diamonds %>%
+  group_by(clarity) %>%
+  summarise(counts = n())
+
+diamonds %>%
+  group_by(clarity) %>%
+  summarise(counts = n() / nrow(diamonds))
+
+A tibble: 1 × 4
+mean	sd	median	mode
+<dbl>	<dbl>	<dbl>	<dbl>
+3932.8	3989.44	2401	605
+A tibble: 1 × 4
+mean	sd	median	mode
+<dbl>	<dbl>	<dbl>	<dbl>
+0.7979397	0.4740112	0.7	0.3
+A tibble: 1 × 4
+mean	sd	median	mode
+<dbl>	<dbl>	<dbl>	<dbl>
+61.7494	1.432621	61.8	62
+A tibble: 1 × 4
+mean	sd	median	mode
+<dbl>	<dbl>	<dbl>	<dbl>
+57.45718	2.234491	57	56
+[1] "df_price mean:"
+3932.79972191324
+[1] "df_price median:"
+2401
+[1] "df_price mode:"
+605
+[1] "df_carat mean:"
+0.797939747868001
+[1] "df_carat median:"
+0.7
+[1] "df_carat mode:"
+0.3
+[1] "df_depth mean:"
+61.749404894327
+[1] "df_depth median:"
+61.8
+[1] "df_depth mode:"
+62
+[1] "df_depth mean:"
+57.457183908046
+[1] "df_depth median:"
+57
+[1] "df_depth mode:"
+56
+A tibble: 5 × 2
+cut	counts
+<ord>	<int>
+Fair 	1610
+Good 	4906
+Very Good	12082
+Premium 	13791
+Ideal 	21551
+A tibble: 5 × 2
+cut	counts
+<ord>	<dbl>
+Fair 	0.02984798
+Good 	0.09095291
+Very Good	0.22398962
+Premium 	0.25567297
+Ideal 	0.39953652
+ 
+A tibble: 7 × 2
+color	counts
+<ord>	<int>
+D	6775
+E	9797
+F	9542
+G	11292
+H	8304
+I	5422
+J	2808
+A tibble: 7 × 2
+color	counts
+<ord>	<dbl>
+D	0.12560252
+E	0.18162773
+F	0.17690026
+G	0.20934372
+H	0.15394883
+I	0.10051910
+J	0.05205784
+ 
+A tibble: 8 × 2
+clarity	counts
+<ord>	<int>
+I1 	741
+SI2 	9194
+SI1 	13065
+VS2 	12258
+VS1 	8171
+VVS2	5066
+VVS1	3655
+IF 	1790
+A tibble: 8 × 2
+clarity	counts
+<ord>	<dbl>
+I1 	0.01373749
+SI2 	0.17044865
+SI1 	0.24221357
+VS2 	0.22725250
+VS1 	0.15148313
+VVS2	0.09391917
+VVS1	0.06776047
+IF 	0.03318502
+ 
+Rank
+ 
+# Rank and dense-rank for factored variables
+# gline and vline plots for central tendency statistics
+
+
+# The difference between rank and dense_rank is 
+# that dense_rank leaves no gaps in ranking sequence
+# when there are ties. That is, if you were ranking 
+# a competition using dense_rank 
+# and had three people tie for second place, you would
+# say that all three were in second 
+# place and that the next person came in third. 
+# Rank would give me sequential numbers,
+# making the person that came in third place (after the ties) 
+# would register as coming in fifth.
+
+
+# Rank references the position of the value in 
+#the sorted vector and is in the same order as the original sequence
+# rank values for price, carat, depth, table
+# we gain the rank and dense rank values for factor variables
+
+# price
+print("df_price rank:")
+df_price %>% rank() %>% head()
+print("df_price dense_rank:")
+df_price %>% dense_rank %>% head()
+
+# carat
+print("df_carat rank:")
+df_carat %>% rank() %>% head()
+print("df_carat dense_rank:")
+df_carat %>% dense_rank() %>% head()
+
+# depth
+print("df_depth rank:")
+df_depth %>% rank() %>% head()
+print("df_depth dense_rank:")
+df_depth %>% dense_rank %>% head()
+
+# table
+print("df_table rank:")
+df_table %>% rank() %>% head()
+print("df_table dense_rank:")
+df_table %>% dense_rank %>% head()
+
+
+
+# GEOM_LINE()
+# The horizontal geometry can create horizonal lines. 
+# You specify the yintercept value. You can provide a
+# vector of values to draw multiple lines in a
+# single geom_hline() layer. You can also have multiple
+# layers which allows for different 
+# aesthetic properties for each layer such as the color and width.
+# Display help on geom_hline()
+# ? geom_hline
+# These geoms add reference lines (sometimes called rules)
+# to a plot, either horizontal, vertical, or diagonal 
+# (specified by slope and intercept). 
+# These are useful for annotating plots.
+
+
+# Notice that just like hline, there is vline for 
+# vertical lines and abline for lines with any slope you like.
+# When you are adding data that is NOT part of
+# the dataframe passed into ggplot, you can
+# Plot jittered df_v$hwy on y axis in random order 
+# Include mean as a red line
+# Hint: geom_hline() and color
+
+ggplot(data = diamonds) + geom_point(mapping = aes(x = carat, y = price)) + 
+  geom_vline(xintercept = mfv(diamonds$carat), size = 1, color = "red") +
+  geom_hline(yintercept = mfv(diamonds$price), linetype="dashed", size = 1) +
+  geom_abline(intercept = 0, slope = 10, size = 1)
+              
+[1] "df_price rank:"
+1.	1.5
+2.	1.5
+3.	3
+4.	4
+5.	5
+6.	6.5
+[1] "df_price dense_rank:"
+1.	1
+2.	1
+3.	2
+4.	3
+5.	4
+6.	5
+[1] "df_carat rank:"
+1.	173
+2.	17
+3.	173
+4.	1534.5
+5.	5328
+6.	446.5
+[1] "df_carat dense_rank:"
+1.	4
+2.	2
+3.	4
+4.	10
+5.	12
+6.	5
+[1] "df_depth rank:"
+1.	20312
+2.	4455.5
+3.	179.5
+4.	38405.5
+5.	48701
+6.	44284
+[1] "df_depth dense_rank:"
+1.	84
+2.	67
+3.	38
+4.	93
+5.	102
+6.	97
+[1] "df_table rank:"
+1.	6709.5
+2.	50300.5
+3.	53686.5
+4.	33997
+5.	33997
+6.	24869.5
+[1] "df_table dense_rank:"
+1.	31
+2.	91
+3.	116
+4.	61
+5.	61
+6.	51
+ 
+Histogram Plot
+# Example:
+# placeholder
+# Let's specify a binwidth. This would be the width in idamonds prices
+# Let's try 5 mpg. I also want to see the bins a bit more clearly so let's adjust 
+# the color and fill and theme. Color is the outline. Fill is the inside. Theme makes 
+# it easy to change the background without having to find a detailed reference 
+# of how to change individual plot properties.
+
+# My quick and dirty histogram formatting is color="black", fill="gray" and theme_classic(). 
+# Let's also define a variable for the binwidth so it is easy to change and try out different values.
+# Since the shape can change drastically depending on the binwidth, it is important to convey the 
+# binwidth on the plot. I use the subtitle and str_c() with the binwidth variable to do this automatically.
+# Histogram of diamonds x=price
+# Create a variable for binwidth and use it to adjust the binwidth
+# Display the binwidth in the subtitle
+# Change the bars to gray with black outline and white background
+
+bw <- 5000
+diamonds %>% ggplot(aes(x=price)) + 
+    geom_histogram(binwidth= bw, color="black", fill="blue") +
+    theme_classic() +
+    labs(title="Histogram of Diamonds Prices",
+         subtitle=str_c("Binwidth:", bw),
+         x="Diamonds Prices", y="")
+
+
+# Density Plot
+# placeholder
+# Probability Density
+
+# If you are looking for a smoother, version of the frequency plot, look no further than geom_density().
+# It is the geom_smooth version of geom_freqpoly. Density plots are good at visualizing the spread of
+# continuous data in terms of probability...which is an area plot with the total area summing to 1.
+# This means that the y axis reflects the probability of that value occurring in the underlying data distribution.
+# geom_density is a smoothed version of the histogram
+# Let's give it a try.
+# Density of mpg x=hwy
+# Use fill="blue" to show the area
+# Hint: geom_density() with fill
+
+diamonds %>% ggplot(aes(x=price, y=)) + 
+    geom_density(fill="green") +
+    theme_classic() +
+    labs(title="Density of diamonds prices",
+      subtitle="",
+       x="Diamonds Prices", y="Diamonds Count")
+       
+# Violin Plot
+# Violin plot by categorical variable
+# Another plot to show the distribution of the data is the violin plot, geom_violin(). It is a cross
+# between a boxplot and a density plot. It works best with a categorical variable and a continuous 
+# variable like the boxplot. Let's give it a try.
+
+# Violin of mpg x=carat, y=pric, fill=carat, 
+# Hint: geom_violin(), as.factor(), filter(), %in%, c()
+diamonds %>% 
+    ggplot(aes(x=carat, y=price, fill=carat)) + 
+    geom_violin() +
+    theme_light() +
+    labs(title="Diamond Carat by Price",
+         subtitle="Violin plot",
+         y="Diamond Price")
+         
+# compare prices of different quality cuts by using filter() and plot
+diamonds %>% filter(cut %in% c("Fair", "Good", "Very Good", "Premium", "Ideal")) %>% 
+    mutate(cut=as.factor(cut)) %>% 
+    ggplot(aes(x=as.factor(cut), y=price, fill=cut)) + 
+    geom_violin() +
+    theme_light() +
+    labs(title="Diamond Cut by Price",
+         subtitle="Violin plot",
+         y="Diamond Price")
+
+# compare prices of clarity by quality by using filter() and plot
+diamonds %>% filter(clarity %in% c("SI1", "VS2", "SI2", "VS1", "VVS2", "VVS1", "(Other)")) %>% 
+    mutate(clarity=as.factor(clarity)) %>% 
+    ggplot(aes(x=as.factor(clarity), y=price, fill=clarity)) + 
+    geom_violin() +
+    theme_light() +
+    labs(title="Diamond Clarity by Price",
+         subtitle="Violin plot",
+         y="Diamond Price")
+
+# compare prices of color by quality by using filter() and plot
+diamonds %>% filter(color %in% c("D", "E", "F", "G", "H", "I", "J")) %>% 
+    mutate(color=as.factor(color)) %>% 
+    ggplot(aes(x=as.factor(color), y=price, fill=color)) + 
+    geom_violin() +
+    theme_light() +
+    labs(title="Diamond Color by Price",
+         subtitle="Violin plot",
+         y="Diamond Price")
+
+
+# Box Plot
+ 
+# boxplots are good for mapping continuous and categorical variables
+b_plot <- ggplot(diamonds, aes(carat, price))
+b_plot + geom_boxplot()
+
+b_plot + geom_boxplot(fill = "white", colour = "#3366FF")
+
+# I will use a boxplot by binning carat since there are a large # of points
+ggplot(data = diamonds, mapping = aes(x = carat, y = price)) +
+  geom_boxplot(mapping = aes(group = cut_width(carat, 0.1)))
+
+b_plot + geom_boxplot(aes(x = carat, y = price, color = color))
+
+# for plotting  cut, clarity, and color, which are ordered factor variables
+ggplot(diamonds, aes(factor(clarity), price, fill=clarity)) + geom_boxplot() + 
+ggtitle("Diamond Price according Clarity") + xlab("Clarity") +
+ylab("Diamond Price U$") + coord_cartesian(ylim=c(0,7500))
+
+# for plotting  cut, clarity, and color, which are ordered factor variables
+ggplot(diamonds, aes(factor(cut), price, fill=cut)) + geom_boxplot() + 
+ggtitle("Diamond Price according Cut") + xlab("Cut") +
+ylab("Diamond Price U$") + coord_cartesian(ylim=c(0,7500))
+
+
+# for plotting  cut, clarity, and color, which are ordered factor variables
+ggplot(diamonds, aes(factor(color), price, fill=color)) + 
+geom_boxplot() + 
+ggtitle("Diamond Price according Color") + xlab("Color") +
+ylab("Diamond Price U$") 
+
+
+# The scale of diamond color goes from D (best) to J (worst).
+# Currently, the levels of diamonds$color are in the wrong order. 
+# Before plotting, I will reverse (using fct_rev) the order of the color levels 
+# so they will be in increasing order of quality on the x-axis. 
+
+diamonds %>%
+  mutate(color = fct_rev(color)) %>%
+  ggplot(aes(x = color, y = price, fill = color)) +
+  geom_boxplot()
+  
+# Analysis and Conclusions
+# Central tendency statistics were produced and explored for the factor variables within 
+# the diamonds dataset using various functions. The data was initially examined using the summary
+# funtion, among others. This produced the central tendency statistics for the factor variables.
+# This information was explored again. 
+
+# The categorical (ordered factor) variables (cut, color, and clarity) were visualized using graphs 
+# to better understand the statistical data. Rank values were viewed for the factor variables.
+
+# A scatterplot graph was also produced with geom_hline and geom_vline for price vs carat, 
+# to view the mode value of each and where these mode values intersected. 
+# Histogram, density, violin, and boxplots were used to further explore the variables 
+# of the diamonds dataset. This exercise assisted in learning the various means of 
+# exploring central tendency statistics within a dataset, as well as analyzing individual
+# variables and the significance of the data they contain. 
+
