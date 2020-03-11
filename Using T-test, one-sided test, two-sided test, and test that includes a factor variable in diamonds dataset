@@ -1,0 +1,355 @@
+
+Jupyter Notebook
+L07-Assignment Last Checkpoint: 01/07/2020 (autosaved) [R 3.5.1]
+
+R 3.5.1
+
+# R features: 
+# t.test()
+# one-sided test
+# two-sided test
+# test that includes a factor variable
+
+# Datasets: diamonds
+
+# Load libraries
+library(tidyverse)
+
+
+# Explore data structure
+# Data: diamonds
+diamonds %>% glimpse()
+
+# Display help on data
+? diamonds
+str(diamonds)
+
+
+# t test 1
+# Two-Tailed T-Test
+# Two-Tailed T-Test using factor value
+# Testing potential statistically significant difference 
+# of price based on Color
+# D = worst, J = best
+# A two-tailed test will test both if the mean is 
+# significantly greater than x and if the mean is significantly 
+# less than x. The mean is considered significantly 
+# different from x if the test statistic is in the top 2.5% 
+# (if using significance level of 0.05)
+# or bottom 2.5% of its probability distribution,
+# resulting in a p-value less than 0.05. 
+
+
+# filter the best and worst colored diamonds, 
+# then perform t-test to determine 
+# a significant difference in price based on the quality of color 
+
+df_best_color <- diamonds %>% filter(color == "J")
+
+df_worst_color <- diamonds %>% filter(color == "D")
+
+t.test(df_best_color$price, df_worst_color$price)
+
+
+# Null hypothesis = no statistically significant difference
+# difference in means of the two sets of values
+# p value is less than 0.05 (significant) so null hypothesis 
+# of there being no difference betweensets of values is rejected
+# This is a statistically significant result and the confidence interval does not contain zero, 
+# indicating a statistically significant difference between the means
+# of the price values of best colored diamonds vs worst colored diamonds.
+# quality of color of diamonds significantly affects the price of diamonds
+# color has the highest t-value of 23.121
+
+
+# Welch Two Sample t-test
+
+# data:  df_best_color$price and df_worst_color$price
+# t = 23.121, df = 4197.9, p-value < 2.2e-16
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+# 1971.232 2336.496
+# sample estimates:
+# mean of x mean of y 
+# 5323.818  3169.954 
+
+
+#t test 2
+# One-Tailed (Two Sampled) T-Test
+# One-Tailed (Two Sampled) T-Test using factor value
+# Testing potential statistically significant difference 
+# of price based on Cut
+# Very Good vs Premium 
+# test that includes a factor variable
+# Null hypothesis = no statistically significant 
+# difference in means of the two sets of values
+# significance level of .05, a one-tailed test allots all of your 
+# alpha to testing the statistical significance in the one 
+# direction of interest.  This means that .05 is in one tail
+# of the distribution of your test statistic. When using a 
+# one-tailed test, you are testing for the possibility of the 
+# relationship in one direction and completely
+# disregarding the possibility of a relationship in the other direction.
+
+
+# This one-sided test has only one rejection region, in the the
+# upper tail of the distribution of the difference in group means.
+# The probability in this tail is .05.
+
+
+# create variables to filter premium and very good cuts
+# look at mean and standard deviation to see how similar they are 
+# for premium cut
+
+df_premium_cut <- diamonds %>% filter(cut == "Premium")
+
+df_premium_cut_mean <- df_premium_cut$price %>% mean() %>% round(1)
+
+df_premium_cut_sd <- df_premium_cut$price %>% sd() %>% round(1)
+
+
+
+# Print results for premium cut
+cat(str_c("Premium cut: mean = ", df_premium_cut_mean, " and standard deviation = ", df_premium_cut_sd))
+
+
+# look at mean and standard deviation to see how similar they are 
+# for very good cut
+
+df_very_good_cut <- diamonds %>% filter(cut == "Very Good")
+
+df_very_good_cut_mean <- df_very_good_cut$price%>% mean() %>% round(1)
+
+df_very_good_cut_sd <- df_very_good_cut$price %>% sd() %>% round(1)
+
+
+
+# Print results for very good cut
+
+cat(str_c("\nVery good cut: mean = ", df_very_good_cut_mean, " and standard deviation = ", df_very_good_cut_sd))
+
+
+
+# calculate one-sided t-test
+# Confidence level: 95%
+# For one-sided tests, the order of the vectors in t.test() is 
+# important because R interprets the alternative "greater" 
+# as (first group listed) > (second group listed)
+# premium cut is listed as > very good cut as it is listed first
+t.test(df_premium_cut$price, df_very_good_cut$price, conf.level = 0.95, alternative = "greater")
+
+
+# Null hypothesis = no statistically significant
+# difference in means of the two sets of values
+# There is a high t value and p value is less than 0.05, 
+# so null hypothesis of there being no difference between 
+# the sets of values is rejected.
+# This is a statistically significant result and the confidence interval does not contain zero, 
+# indicating a statistically significant difference between the means
+# of the price values of very good cut of diamonds vs premium cut of diamonds.
+# quality of cut significantly affects the price of diamonds
+
+# Premium cut: mean = 4584.3 and standard deviation = 4349.2
+# Very good cut: mean = 3981.8 and standard deviation = 3935.9
+
+
+# Welch Two Sample t-test
+
+# data:  df_premium_cut$price and df_very_good_cut$price
+# t = 11.696, df = 25844, p-value < 2.2e-16
+# alternative hypothesis: true difference in means is greater than 0
+# 95 percent confidence interval:
+# 517.7609      Inf
+# sample estimates:
+# mean of x mean of y 
+# 4584.258  3981.760 
+
+
+
+# t test 3
+# T-Test that includes a factor variable
+# DIAMONDS CLARITY
+# One-Tailed (Two Sampled) T-Test using factor value
+# Testing potential statistically significant difference 
+# of price based on Clarity
+# moderately good (VS1) vs best (IF) quality 
+# create  variables with best and worst clarity classifiers
+# perform t-test on the two sets of values
+
+df_best_clarity <- diamonds %>% filter(clarity == "VS1")
+df_worst_clarity <- diamonds %>% filter(clarity == "IF")
+t.test(df_best_clarity$price, df_worst_clarity$price)
+
+
+# Null hypothesis = no statistically 
+# significant difference in means of the two sets of values
+# p value is less than 0.05, so null hypothesis of there being no difference between 
+# the sets of values is rejected.
+# This is a statistically significant result and the confidence interval does not contain zero, 
+# indicating a statistically significant difference between the means
+# of the price values of best clarity of diamonds vs worst clarity of diamonds.
+# Quality of clarity affects the sales price.
+
+
+
+# DIAMONDS CARAT 
+# One-Tailed (Two Sampled) T-Test using factor value
+# Testing potential statistically significant difference 
+# of price based on Carats
+# Data is split into two sets - 
+# upper half ( 2.6 or above) and lower half (2.5999 and below)
+# create  variables with best and worst clarity classifiers
+
+df_diamonds_highest_carat <- diamonds %>% filter(carat <= "2.5999")
+
+df_diamonds_lowest_carat <- diamonds %>% filter(carat >= "2.6")
+
+
+# perform t-test on the two sets of values
+
+t.test(df_diamonds_highest_carat$price, df_diamonds_lowest_carat$price)
+
+
+# look at mean and standard deviation to see how similar they are 
+
+df_diamonds_highest_carat_mean <- df_diamonds_highest_carat$price%>% mean() %>% round(1)
+
+df_diamonds_highest_carat_sd <- df_diamonds_highest_carat$price %>% sd() %>% round(1)
+
+# Print results for highest carat
+
+cat(str_c("\nDiamonds highest carat: mean = ", df_diamonds_highest_carat_mean, " and standard deviation = ", df_diamonds_highest_carat_sd))
+
+
+
+# look at mean and standard deviation to see how similar they are 
+
+df_diamonds_lowest_carat_mean <- df_diamonds_lowest_carat$price%>% mean() %>% round(1)
+
+df_diamonds_lowest_carat_sd <- df_diamonds_lowest_carat$price %>% sd() %>% round(1)
+
+# Print results for highest carat
+
+cat(str_c("\nDiamonds lowest carat: mean = ", df_diamonds_lowest_carat_mean, " and standard deviation = ", df_diamonds_lowest_carat_sd))
+
+
+
+# Null hypothesis = no statistically 
+# significant difference in means of the two sets of values
+# p value is less than 0.05, so null hypothesis of there being no difference between 
+# the sets of values is rejected.
+# This is a statistically significant result and the confidence interval does not contain zero, 
+# indicating a statistically significant difference between the means
+# of the price values of the diamonds with higher carats vs diamonds
+# with lower carats
+# Amount of carats significantly affects the sales price.
+
+
+#  graph diamonds price vs carat to examine data distribution
+
+diamonds %>%  ggplot(mapping = aes(x = carat, y = price)) + 
+
+   geom_jitter(alpha = 0.5) + 
+
+   geom_smooth(method = "lm", se = FALSE)
+
+bw <- 0.1
+
+diamonds %>% ggplot(aes(x=carat)) + 
+
+   geom_histogram(mapping = aes(y=..density..), binwidth=bw, color="black", fill="gray") +
+
+   geom_density(fill="blue", alpha=0.2) +
+
+   geom_rug(alpha=0.2, color="blue") +
+
+   theme_classic() +
+
+   labs(title="Density of diamond carats",
+
+       subtitle=str_c("Binwidth:", bw),
+
+       x="Diamond Carats", y="Diamond Count")
+
+
+# Welch Two Sample t-test
+
+# data:  df_best_clarity$price and df_worst_clarity$price
+# t = 9.4863, df = 2673.2, p-value < 2.2e-16
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+#  773.160 1176.073
+# sample estimates:
+# mean of x mean of y 
+# 3839.455  2864.839 
+
+
+# Welch Two Sample t-test
+
+# data:  df_diamonds_highest_carat$price and df_diamonds_lowest_carat$price
+# t = -25.506, df = 69.225, p-value < 2.2e-16
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+# -11675.627  -9981.765
+# sample estimates:
+# mean of x mean of y 
+# 3918.747 14747.443 
+
+
+# Diamonds highest carat: mean = 3918.7 and standard deviation = 3970.9
+# Diamonds lowest carat: mean = 14747.4 and standard deviation = 3549.3
+
+
+# Analysis and Conclusions
+# two-sided t-test results interpretation
+
+# Diamonds Color Null hypothesis = no statistically significant difference in means of the two sets of 
+# values. p-value is less than 0.05, so null hypothesis of there being no statistically significant 
+# difference between means of the sets of values is rejected. This, along with confidence 
+# interval not containing zero, indicates a statistically significant difference between 
+# the means of the price values of best colored diamonds vs worst colored diamonds. 
+# The quality level of color of diamonds significantly affects the prices of the diamonds. 
+# Color has the highest t-value of 23.121.
+# one-sided t-test results interpretation
+
+# Diamonds Cut Null hypothesis = no significant difference in means of the two sets of values. 
+# p-value is less than 0.05, so null hypothesis of there being no statistically significant 
+# difference between the means of the sets of values is rejected. This is a statistically 
+# significant result and the confidence interval does not contain zero, indicating a statistically 
+# significant difference between the means of the price values of best cut diamonds vs worst cut diamonds.
+# The quality level of cut of diamonds affects the corresponding prices of the diamonds.
+# t-test with factor results interpretation
+
+# Diamonds Clarity
+# Null hypothesis = no statistically significant difference in means of
+# the two sets of values. p-value is less than 0.05, so null hypothesis of there
+# being no statistically sigificant difference between the means of the sets of values
+# is rejected. This is a statistically significant result and the confidence interval 
+# does not contain zero, indicating a statistically significant difference between the means 
+# of the price values of best clarity of diamonds vs worst clarity of diamonds.
+# The quality level of clarity of diamonds affects the corresponding prices of the diamonds.
+
+# Diamonds Carat
+# The values of diamonds carats have been split into a lower and upper half.
+# Null hypothesis = no statistically significant difference in means of the
+# two sets of values. p-value is less than 0.05, so null hypothesis of there
+# being no statistically sigificant difference between the means of the sets 
+# of values is rejected. This is a statistically significant result and the
+# confidence interval does not contain zero, indicating a statistically 
+# significant difference between the means of the price values of lower 
+# half of diamond carats and the upper half of diamond carats. The number of carats 
+# significantly affects the corresponding prices of the diamonds. Interestingly,
+# the t-value for this t-test was a negative number. The means were examined and 
+# the set of values with the lower carat values has a mean that is nearly four 
+# times higher than the mean of the set of values with the higher carat values.
+# From the graph, it is clear that there are far more values with carats at 2.5999 
+# and below than 2.6 and above. The density plot also demonstrates this. This accounts
+# for the difference in mean values and the negative t-value.
+
+# welch T-test definition by statistics how to
+# t-test, Welch’s adjusted T or unequal variances t-test) is a modification of a 
+# Student’s t-test to see if two sample means are significantly different.
+# The modification is to the degrees of freedom used in the test, 
+# which tends to increase the test power for samples with unequal variance.
+# The null hypothesis for the test is that the means are equal.
+# The alternate hypothesis for the test is that means are not equal.
