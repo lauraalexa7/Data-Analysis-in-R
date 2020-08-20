@@ -1,0 +1,60 @@
+# Plot variables in the diamonds database against the price of diamonds to
+# determine trends and factors affecting price
+
+# import tidyverse
+library(tidyverse)
+
+# use glimpse() to explore the diamonds dataset 
+diamonds %>% glimpse()
+
+# Use ? to display information about the diamonds dataset
+? diamonds
+
+# Select price, cut, color, and carat and assign to df
+df <- diamonds %>% select(price, cut, color, carat)
+
+# Create a scatterplot with x = carat, y = price, color = color
+# use facet grid to gain a 2d
+df %>% ggplot(mapping = aes(x = carat, y = price, color = color)) +
+  
+  geom_jitter(alpha = 0.5) +
+  
+  geom_smooth(method = "lm", se = FALSE) +
+  
+  facet_grid(color ~cut) + 
+
+  labs(title = "Diamonds Price: price vs carat by cut and color", subtitle = "custom geom jitter and alpha with color mapped to color")
+
+
+# Create another scatterplot with x = cut, y = price and
+# use geom jitter to prevent overplotting
+df %>% ggplot(mapping = aes(x = cut, y = price)) +
+  
+  geom_jitter(alpha = 0.2) +
+  
+  labs(title = "Diamonds Price: price vs cut")
+  
+  
+  # Create a third scatterplot with x = carat, y = price, color = carat
+  df %>%
+  
+  ggplot(mapping = aes(x = carat, y = price, color = carat)) +
+  
+  geom_jitter(alpha = 0.1) +
+  
+  geom_smooth(method = "lm", se = FALSE) +
+  
+  labs(title = "Diamonds Price: carat vs price", subtitle = "custom geom jitter and alpha with color mapped to carat")
+  
+  
+  ## Analysis and Conclusions
+
+To gain a better understanding of the factors contributing to higher prices of diamonds, the price variable was mapped to the y axis, with cut, color, and carat mapped to the x axis. A scatterplot with a linear trendline was used with continuous variables to highlight trends and patterns within the data.
+
+In chart 1, Price vs. Carat by Color and Cut were mapped using a Facet Grid. This was used to gain a visual representation of how each variable correlates with price. This graph shows there is a positive correlation between price and increasing carat weight, as well as quality of cut and color. The density of data points based on various variables is difficult to discern, so separate charts were created below to drill down.
+
+In chart 2, Price vs Cut by Color and Carat were mapped. This graph shows the density of data points begins to decrease beyond the price of $5000.
+
+In chart 3, Price vs Carat were mapped with Carat mapped to Color. This graph shows the density of data points decreases sharply beyond 2 carats.
+
+The price continues to rise in relation to the increase in carat weight. It is determined there is a positive correlation between price and increasing carat weight, as well as quality of cut and color. As the price of the diamonds increases beyond a certain price point, however, the demand decreases.
