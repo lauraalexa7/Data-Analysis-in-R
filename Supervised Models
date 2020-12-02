@@ -1,0 +1,765 @@
+
+# Load libraries
+library(lubridate)
+library(tidyverse)
+
+# set.seed for reproducible results
+set.seed(1222) 
+
+# MODEL 1: Use features ('price', 'sqft.living', 'sqft.lot', 'yr.built', 'bedrooms')
+# to predict label (price levels above $400,000)
+
+# 1. MULTI REGRESSION MODEL 
+# Load and explore data structure
+# clean data and create dfs and plots
+# remove the '_' character from colnames
+# as it causes issues with R names
+# remove NA values
+
+# potential transformations 
+# summary(kc_house_data)
+# kc_house_data <- kc_house_data %>%
+#   mutate(sales = as.double(sales),
+#         inventory =  as.double(inventory),
+#         median = as.integer(median),
+#         volume = as.integer(volume),
+#         year = as.integer(year),
+#         month = as.integer(month),
+#         listings =  as.integer(listings))
+# get a glimpse and summary of the data 
+# get a complete list of parsing failures using problems()
+
+# potential filtering 
+# Remove unwanted columns: symboling, normalized.losses
+# Remove the rows that have missing values
+# Hint: select(), complete.cases()
+# kc_housing <- kc_housing %>% 
+# select(-variable, -variable)  %>%
+# filter(variable(.))
+
+# create a function to read in the data 
+read.auto = function(file = "kc_house_data.csv"){
+
+# read the raw csv file
+kc_house_data <- read_csv(file, col_names = TRUE, na = c('?', '', NA))
+   
+# remove "_" characters from names
+    
+    names(kc_house_data) <- kc_house_data %>%
+      names() %>%
+      str_replace_all("_", '.')
+    
+kc_house_data %>% return()
+}
+
+kc_house_data = read.auto()
+kc_house_data %>% glimpse()
+
+# remove na values 
+
+    kc_house_data1 <- na.omit(kc_house_data)
+    #kc_house_data %>% glimpse()
+    #kc_house_data %>% summary()
+    #problems(kc_house_data)
+ 
+# filter prices equal to or above 300,000
+kc_house_data1 = kc_house_data1 %>% filter(price >= 400000)
+kc_house_data1 = kc_house_data1 %>% filter(bedrooms < 33)
+kc_house_data1 = kc_house_data1 %>% mutate(bedrooms1 = as.factor(bedrooms))
+
+kc_house_data %>% glimpse()
+
+# ***change the bedroom type int to factor 
+
+kc_house_data1 %>%
+  ggplot(aes( bedrooms, price)) +
+  geom_boxplot(alpha = 0.1) +
+  labs(title = "Price vs bedrooms") 
+
+kc_house_data1 %>%
+  ggplot(aes(x = sqft.lot, y = price)) +
+  geom_jitter(alpha = 0.1) +
+  geom_smooth(se = FALSE, method = "lm") +
+  labs(title = "Price vs sqft.lot") 
+
+kc_house_data1 %>% 
+ ggplot(aes(x= sqft.living, y = price)) +
+ geom_jitter(alpha = 0.1) +
+ geom_smooth(se = FALSE, method = "lm") +
+ labs(title = "Price vs sqft.living")
+
+kc_house_data1 %>%
+  ggplot(aes(x = yr.built, y = price)) +
+  geom_jitter(alpha = 0.1) +
+  geom_smooth(se = FALSE, method = "lm") +
+  labs(title = "Price vs yr_built")  
+  
+#Plotting the data
+# Create a function plot.hist to plot
+# a histogram and a density plot
+# Hint: geom_histogram(), geom_density()
+
+plot.hists <- function(col, df, bins = 20){
+  p1 <- ggplot(df, aes_string(col)) + 
+    geom_histogram(aes(y = ..density..), bins = bins,  alpha = 0.3, color = 'blue') +
+    geom_density (size = 1) +
+    labs(title=str_c("Histogram and density function \n for ", col), 
+         x=str_c("value of ", col))
+  
+  # Print the plot
+  p1 %>% print ()
+}
+
+cols <- c ('price', 'sqft.living', 'sqft.lot', 'yr.built')
+
+cols %>% walk(plot.hists, kc_house_data1)
+# Transform the Variables
+kc_house_data1 <- kc_house_data1 %>%
+mutate(price.log = log(price),
+    sqft.living.sqrt = sqrt(sqft.living), 
+    sqft.lot.log = log(sqft.lot), 
+    yr.built.log = log(yr.built))
+
+cols= c('price.log', 'sqft.living.sqrt', 'sqft.lot.log', 'yr.built.log')
+cols %>% walk(plot.hists, kc_house_data1)
+
+plot.feature = function(col, df){
+    p1 = ggplot(df, aes_string(x=col, y = 'price.log')) +
+    geom_point() + 
+    geom_smooth(size = 1, color = 'green', method="loess") +
+    labs(title=str_c("Relationship between ", col, " and log price"),
+         x=col, y="Price")
+    p1 %>% print()
+}
+
+cols = c('price.log', 'sqft.living.sqrt', 'sqft.lot.log', 'yr.built.log')
+cols %>% walk(plot.feature, kc_house_data1)
+
+kc_house_data1 %>% glimpse()
+
+# normalize features
+normalize <- function(x) (x - mean(x))/sd(x)
+
+kc_house_data1 <- kc_house_data1 %>% mutate(price.log.n = normalize(price.log),
+    sqft.living.sqrt.n = normalize(sqft.living), 
+    sqft.lot.log.n = normalize(sqft.lot), 
+    yr.built.log.n = normalize(yr.built))
+
+kc_house_data1 %>% glimpse() 
+
+plot.hists('sqft.living.sqrt.n', kc_house_data1)
+plot.feature('sqft.living.sqrt.n', kc_house_data1)
+
+
+plot.hists('sqft.lot.log.n', kc_house_data1)
+plot.feature('sqft.lot.log.n', kc_house_data1)
+
+
+plot.hists('yr.built.log.n', kc_house_data1)
+plot.feature('yr.built.log.n', kc_house_data1)
+
+
+kc_house_data1.model <- lm(price ~ sqft.living.sqrt.n  + sqft.living.sqrt.n + sqft.lot.log.n + yr.built.log.n, data = kc_house_data1)
+
+kc_house_data1.model %>% summary()
+
+cat('The coefficient confidence intervals')
+kc_house_data1.model %>% confint()
+
+kc_house_data1 <- kc_house_data1 %>%
+mutate(score = predict(kc_house_data1.model, data = kc_house_data1),
+      resids = price.log.n - exp(score))
+
+# add predicted score and log of residual values to dataframe
+kc_house_data1 <- kc_house_data1 %>%
+ mutate(score = predict(kc_house_data1.model, data = kc_house_data1), resids = price.log.n - exp(score))
+
+kc_house_data1 %>% select(price, score) %>% head()
+
+# create a residuals plotting function 
+plot.resids <- function(df) {
+    p1 <- df %>%
+    ggplot(aes(resids, ..density..)) +
+    geom_histogram(bins = 10, alpha = 0.3, color = 'red') + 
+    geom_density(size = 1) +
+    labs(title="Histogram and density function \n for residuals", x="Residual value")
+    
+p2 <- df %>%
+ggplot(aes(sample = resids)) +
+geom_qq() +
+labs(title="Quantile-quantile Normal plot \n of residuals")
+    
+p1 %>% print()
+p2 %>% print()
+}
+
+# create a scatter plot function with a trend line 
+
+scatter.resids <- function(df){
+df %>%
+    ggplot(aes(score, resids)) +
+    geom_point(size = 2) +
+    geom_smooth(size = 1, color = 'blue', method="loess") +
+    labs(title="Residuals vs fitted values", x ="fitted values", y="residuals" )
+}
+
+# plot the residuals 
+kc_house_data1 %>% plot.resids()
+
+# Evaluate the model performance
+kc_house_data1 <- kc_house_data1 %>%
+ mutate(score = predict(kc_house_data1.model, data = kc_house_data1),
+       resids = price.log - score, 
+       predicted.price = exp(score))
+
+# display the first few rows of the last columns in the data frame 
+# from price to predicted price 
+kc_house_data1 %>% select(price, score) %>% head()
+
+# create a residual plotting function 
+plot.resids <- function(df){
+    p1 <- df %>%
+    ggplot(aes(resids, ..density..)) +
+    geom_histogram(bins = 10, alpha = 0.3, color = 'blue')
+    geom_density(size = 1) +
+    labs(title="Histogram and density function \n for residuals", x="Residual value")
+    # plot a qq plot
+p2 <- df %>%
+ ggplot(aes(sample = resids)) +
+ geom_qq() +
+ labs(title="Quantile-quantile Normal plot \n of residuals")
+
+# print the plots
+p1 %>% print()
+p2 %>% print()
+}
+
+# plot the residuals and create a scatter plot function including a trend
+
+scatter.resids <- function(df){
+    df %>%
+    ggplot(aes(score, resids)) +
+    geom_point(size = 2) +
+    geom_smooth(size = 1, color = 'red', method="loess") +
+    labs(title="Residuals vs fitted values", x="Fitted values", y="Residuals")
+}
+
+# plot the residuals
+kc_house_data1 %>% scatter.resids()
+
+# Train the model
+kc_house_data1.model <- lm(price ~  sqft.living.sqrt + sqft.lot.log 
+    + yr.built.log, data = kc_house_data1)
+
+# View the model summary
+kc_house_data1.model %>% summary()
+
+# print the confidence interval of the model coefficients
+cat('The coefficient confidence intervals')
+kc_house_data1.model %>% confint()
+
+# Add the predicted score to the dataframe
+# along with the log of the residual values
+# Hint: predict()
+kc_house_data1 <- kc_house_data1 %>% 
+  mutate(score = predict(kc_house_data1.model, data = kc_house_data1),
+         resids = price - score)
+         
+
+# Display the first few rows of the 
+# last columns in the data frame from price to predicted.price
+# Hint: select() with the : operator, head()
+kc_house_data1 %>% select(price, score) %>% head()
+
+# create a residuals plotting function
+plot.resids <- function(df){
+  # Plot both a histogram and a density plot
+  p1 <- df %>% 
+    ggplot(aes(resids, ..density..)) + 
+    geom_histogram (bins = 10, alpha = 0.3, color = 'blue') +
+    geom_density (size = 1) +
+    labs(title="Histogram and density function \n for residuals", x="Residual value")
+    # Plot a qq plot
+p2 <- df %>% 
+    ggplot(aes(sample = resids)) + 
+    geom_qq () + 
+    labs(title="Quantile-quantile Normal plot \n of residuals")
+    
+    # print the plots
+p1 %>% print()
+p2 %>% print()
+}
+
+# plot the residuals
+kc_house_data1 %>% plot.resids()
+
+# plot the residuals vs fitted values
+scatter.resids <- function(df){
+  # Plot the points and a trend
+  df %>% 
+    ggplot(aes(score, resids)) + 
+    geom_point (size = 2) +
+    geom_smooth (size = 1, color = 'red', method="loess") +
+    labs(title="Residuals vs fitted values", x="Fitted values", y="Residuals")
+}
+
+# Plot the residuals
+kc_house_data1 %>% plot.resids ()
+
+
+
+# MODEL 2 CLASSIFICATION OR CREATE ANOTHER MODEL WITH different features 
+# determine if home price can be classified based on number of floors
+
+kc_houses <- "kc_house_data.csv" %>%
+    read_csv()
+
+kc_houses  %>% glimpse()
+# remove the '_' character from colnames
+# as it causes issues with R names
+names(kc_houses) <- kc_houses %>%
+  names() %>%
+  str_replace_all("_", '.')
+
+# remove NA values
+kc_houses <- na.omit(kc_houses)
+
+kc_houses %>% glimpse()
+
+# simple regression model
+# create a function plot.hist
+# create histogram and density plot
+
+plot.hists <- function(col, df, bins = 20) {
+  p1 <- ggplot(df, aes_string(col)) +
+    geom_histogram(aes(y = ..density..), bins = bins, alpha = 0.3, color = 'red') +
+    geom_density(size = 1) +
+    labs(title=str_c("Histogram and density function \n for ", col), x=str_c("value of ", col))
+  
+  # print the plot
+  p1 %>% print()
+}
+
+# Create a list of columns of interest
+# Hint: c()
+cols <- c( 'price', 'floors')
+
+# Loop through each column and call the plot function
+# Hint: walk()
+cols %>% walk(plot.hists, kc_houses)
+
+kc_houses %>% glimpse()
+
+# Transform Data
+# add log and sqrt functions for price and floors
+kc_houses$price %>% head(5)
+
+kc_houses <- kc_houses %>% 
+  mutate(price.log = log(price), floors.sqr = sqrt(floors))
+
+# create a list of the transformed 
+# data cols
+cols = c('price.log', 'floors.sqr')
+
+
+# now loop through these cols and plot
+
+cols %>% walk(plot.hists, kc_houses)
+
+# Create a plotting function for points and a trend line
+# Set y to hu.diameter.log
+plot.feature = function(col, df){
+  p1 = ggplot(df, aes_string(x = col, y = 'price')) + 
+    geom_point() + 
+    geom_smooth(size = 1, color = 'red', method="loess") + 
+    labs(title=str_c("Relationship between ", col, " and log category"),
+         x=col, y="Price")
+  
+  # Print the plot
+  p1 %>% print()
+}
+
+# Create a list of cols to compare
+cols = c('price', 'floors', 'floors.sqr', 'price.log')
+
+# Loop through each column and call the plot function
+# Hint: walk()
+cols %>% walk(plot.feature, kc_houses)
+
+kc_houses %>% glimpse()
+
+# DATA NORMALIZATION 
+
+# create a normalized function that centers to 0 and scales to sds
+# zscore: subtracts the mean of all data points from each 
+# individual data point, then divide those points by the standard deviation of all points. 
+kc_houses$price.log %>% head(5)
+
+
+normalize <- function(x) (x - mean(x))/sd(x)
+storms1 <- storms1 %>%
+mutate(price.n = normalize(price), floors.n = normalize(floors), price.log.n = normalize(price.log), floors.sqr.n = normalize(floors.sqr))
+# Explore result
+
+storms1 %>% 
+  select(price.n = normalize(price), floors.n = normalize(floors), price.log.n = normalize(price.log), floors.sqr.n = normalize(floors.sqr) %>%
+  glimpse() %>%
+  summary()
+# The data is ready for a multivariate linear regression model. Explore the transformed features.
+
+
+# Plot the histogram of floors.sqr
+```{r}
+plot.hists('floors.sqr', kc_houses)
+
+# Plot the features of wind.sqr
+plot.feature('wind.sqr.n', kc_houses)
+
+
+
+#Plot the histogram of floors.sqr
+plot.hists('floors.log.n', kc_houses )
+
+# Plot the features of price.log
+plot.feature('price.log.n', kc_houses)
+
+
+ Create an linear model of 
+# price.log ~ floors.sqrt
+# Hint: lm()
+# price log is followed by ~ tilde because it is the label
+# all others are features so they can be chained using '+'
+```{r}
+kc_houses.mod <- lm(price.log.n ~ price.n + floors.n + floors.log.n data = kc_houses)
+
+
+# View the model summary
+# Hint: summary()
+kc_houses.mod %>% summary()
+
+# Print the confidence interval of the model coefficients
+# Hint: confint()
+cat('The coefficient confidence intervals')
+kc_houses.mod %>% confint()
+
+# add predicted score and log of residual values to dataframe
+kc_houses <- kc_houses %>%
+  mutate(score = predict(kc_houses.mod, data = kc_houses), resids = price.log.n - exp(score))
+
+
+# create a residuals plotting function
+```{r}
+plot.resids <- function(df){
+  p1 <- df %>%
+    ggplot(aes(resids, ..density..)) + 
+    geom_histogram (bins = 10, alpha = 0.3, color = 'red') +
+    geom_density(size = 1) +
+    labs(title="Histogram and desnsity function \n for residuals", x="Residual value")
+
+# plot a qq plot
+p2 <- df %>%
+  ggplot(aes(sample = resids)) + 
+  geom_qq() +
+  labs(title="Quantile-quantile Normal plot \n of residuals")
+
+p1 %>% print()
+p2 %>% print()
+}
+
+kc_houses %>% plot.resids()
+
+# Create a scatter plot function with a trend line
+scatter.resids <- function(df){
+  df %>%
+    ggplot(aes(score, resids)) +
+    geom_point (size = 2) +
+    geom_smooth (size = 1, color = 'blue', method ="loess") +
+    labs(title="Residuals vs fitted values", x="Fitted values", y="Residuals")
+}
+
+
+#plot the residuals
+kc_houses %>% scatter.resids ()
+
+# Evaluate model performance
+# Add the predicted score to the dataframe
+# along with the log of the residual values
+# Hint: predict()
+kc_houses <- kc_houses %>% 
+  mutate(score = predict(kc_houses.mod, data = kc_houses),
+         resids = price.log - score,
+         predicted.price = exp(score)) 
+
+# Display the first few rows of the 
+# last columns in the data frame from price to predicted.price
+# Hint: select() with the : operator, head()
+kc_houses %>% select(price:predicted.price) %>% head()
+
+Notice that for most cases the label (log label) values are close to the predicted (log predicted or score), and the residuals are small. In a few cases there are larger discrepancies and residuals. 
+
+The code in the cell below plots the (log) residuals. Execute this coded and examine the results.
+
+# Create an residuals plotting function
+# Hint: geom_histogram(), geom_density()
+plot.resids <- function(df){
+  # Plot both a histogram and a density plot
+  p1 <- df %>% 
+    ggplot(aes(resids, ..density..)) + 
+    geom_histogram(bins = 10, alpha = 0.3, color = 'blue') +
+    geom_density(size = 1) +
+    labs(title="Histogram and density function \n for residuals", x="Residual value")
+
+  # Plot a qq plot
+  # Hint: geom_qq()
+  p2 <- df %>% 
+    ggplot(aes(sample = resids)) + 
+    geom_qq() + 
+    labs(title=
+           
+  
+  # Print the plots
+  p1 %>% print()
+  p2 %>% print()
+}
+
+# Plot the residuals
+storms1 %>% plot.resids()
+
+# Create an scatter plot function including trend
+# Hint: geom_point(), geom_smooth()
+scatter.resids <- function(df){
+  # Plot the points and a trend
+  df %>% 
+    ggplot(aes(score, resids)) + 
+    geom_point(size = 2) +
+    geom_smooth(size = 1, color = 'red', method="loess") +
+    labs(title="Residuals vs fitted values", x="Fitted values", y="Residuals")
+}
+
+# Plot the residuals
+kc_houses %>% scatter.resids()
+
+# create a linear model 
+kc_houses.mod <- lm(price.log ~ floors, data = kc_houses)
+
+kc_houses.mod %>% summary()
+
+# Print the confidence interval of the model coefficients
+# Hint: confint()
+cat('The coefficient confidence intervals')
+kc_houses.mod %>% confint()
+
+# Add the predicted score to the dataframe
+# along with the log of the residual values
+# Hint: predict()
+kc_houses <- kc_houses %>% 
+  mutate(score = predict(storms1.mod, data = kc_houses),
+         resids = hu.diameter.log - score,
+         predicted.price = exp(score)) 
+
+# Display the first few rows of the 
+# last columns in the data frame from price to predicted.price
+# Hint: select() with the : operator, head()
+kc_houses %>% select(price:predicted.price) %>% head()
+
+# Create an residuals plotting function
+# Hint: geom_histogram(), geom_density()
+plot.resids <- function(df){
+  # Plot both a histogram and a density plot
+  p1 <- df %>% 
+    ggplot(aes(resids, ..density..)) + 
+    geom_histogram (bins = 10, alpha = 0.3, color = 'blue') +
+    geom_density (size = 1) +
+    labs(title="Histogram and density function \n for residuals", x="Residual value")
+  
+  # Plot a qq plot
+  # Hint: geom_qq()
+  p2 <- df %>% 
+    ggplot(aes(sample = resids)) + 
+    geom_qq () + 
+    labs(title="Quantile-quantile Normal plot \n of residuals")
+  
+  # Print the plots
+  p1 %>% print()
+  p2 %>% print()
+}
+
+# Plot the residuals
+kc_houses %>% plot.resids ()
+# help(resid)
+```
+Examine these results. Notice that the residuals have some deviation from the ideal Normal, paticularly at the high end. This means that the price of certain autos are being significantly underestimated. 
+
+The code of in the cell below plots the residuals vs. the fitted values. Execute this code and examine the results.  
+Create an scatter plot function including trend
+Hint: geom_point(), geom_smooth()
+```{r}
+scatter.resids <- function(df){
+  # Plot the points and a trend
+  df %>% 
+    ggplot(aes(score, resids)) + 
+    geom_point (size = 2) +
+    geom_smooth (size = 1, color = 'red', method="loess") +
+    labs(title="Residuals vs fitted values", x="Fitted values", y="Residuals")
+}
+
+# Plot the residuals
+kc_houses %>% plot.resids ()
+```
+
+## HYPOTHESIS TESTING 
+
+# T-Test : Test potential statistically significant
+# difference of price based on grade 
+# remove na values 
+  
+# create a function to read in the data 
+read.auto = function(file = "kc_house_data.csv"){
+
+# read the raw csv file
+kc_house_data <- read_csv(file, col_names = TRUE, na = c('?', '', NA))
+
+    
+# remove "_" characters from names
+    
+    names(kc_house_data) <- kc_house_data %>%
+      names() %>%
+      str_replace_all("_", '.')
+    
+kc_house_data %>% return()
+}
+
+kc_house_data %>% glimpse()
+
+kc_house_data %>% glimpse()
+    kc_house_data2 <- na.omit(kc_house_data)
+    #kc_house_data %>% glimpse()
+    #kc_house_data %>% summary()
+    #problems(kc_house_data)
+ 
+# filter prices equal to or above 300,000
+
+kc_house_data2 %>% glimpse()
+
+
+# data is split into 2 sets
+df_best_grade <- kc_house_data2 %>% filter(grade >= 9)
+
+df_worst_grade <- kc_house_data2 %>% filter(grade <= 8)
+
+# perform t-test on the 2 sets of values
+
+t.test(df_best_color$price, df_worst_color$price)
+
+# look at the mean and standard deviation of best grade
+df_best_grade_mean <- df_best_grade_mean$price%>% mean() %>% round(1)
+
+df_best_grade_sd <- df_best_grade_mean$price %>% sd() %>% round(1)
+
+# Print results for highest carat
+
+cat(str_c("\nhighest grade: mean = ", df_best_grade_mean, " and standard deviation = ", df_best_grade_sd))
+
+
+# look at the mean and standard deviation of worst grade
+df_worst_grade_mean <- df_worst_grade_mean$price%>% mean() %>% round(1)
+
+df_worst_grade_sd <- df_worst_grade_mean$price %>% sd() %>% round(1)
+
+# Print results for highest carat
+
+cat(str_c("\nlowest grade: mean = ", df_worst_grade_mean, " and standard deviation = ", df_worst_grade_sd))
+
+
+#  graph kc_hhouse_data price vs grade to examine data distribution
+
+kc_house_data2 %>%  ggplot(mapping = aes(x = grade, y = price)) + 
+
+   geom_jitter(alpha = 0.5) + 
+
+   geom_smooth(method = "lm", se = FALSE)
+
+bw <- 0.1
+
+kc_house_data2 %>% ggplot(aes(x=grade)) + 
+
+   geom_histogram(mapping = aes(y=..density..), binwidth=bw, color="black", fill="gray") +
+
+   geom_density(fill="blue", alpha=0.2) +
+
+   geom_rug(alpha=0.2, color="blue") +
+
+   theme_classic() +
+
+   labs(title="Density of KC house grades",
+
+       subtitle=str_c("Binwidth:", bw),
+
+       x="KC house grades", y="House Count")
+
+
+
+
+
+Analysis of  model 1:
+  The purpose of this model is to predict the hu.diameter (label)  based on wind and pressure (features).
+
+I created a list of columns of interest 'hu.diameter', 'wind', 'pressure' and plotted histograms for each. 
+All seemed skewed. Hu.diameter has an outlier value, which I remove. The data distribution for wind density  is skewed to the left. The data distribution for pressure density  is skewed to the right. From this, I know I will need to transform and normalize the data. Hu.diameter is transformed with the log function, wind is transformed with the square root function, and pressure is transformed with the square root function. 
+The transformed variables are plotted and we can see that the hu.diameter variable responded well to the log function as the data distribution for the density is largely a symmetric distribution. The wind now appears to be slightly skewed to the left after the square root transformation, but the data distribution for wind density is more symmetrical than before the transformation. The pressure variable did not respond well to the square root transformation, so I tried a log transformation, which resulted in a more symmetrical distribution. The distribution is still skewed to the right and is less than ideal, but is more symmetrical than before the transformation took place.
+
+We then normalize the data, changing the range of data values between 0 and 1 by subtracting the mean of all data points from each individual data point, then dividing those points by the standard deviation of all points. This is performed on the wind, hu.diameter, and pressure variables. The normalized variables are plotted with histograms.  of all three, the hu.diameter variable is the most symmetrically distributed. 
+I now am able to build a multivariate linear model using the lm() function and print the confidence intervals of the model coefficients.  
+The P value is <  0.05. It is significant, so the null hypothesis can be rejected.
+
+Coefficients tell you which relationships in your model are statistically significant 
+Positive coefficient indicates that as the value of the independent variable increases, the mean of the dependent variable also tends to increase. Negative suggests that as the independent variable increases, the dependent variable tends to decrease. 
+Independent variable is the variable that is changed or controlled in a scientific experiment to test the effects on the dependent variable. Dependent variable is the variable being tested and measured in a scientific experiment 
+
+1. The residual standard error is reasonably small at 0.3055.
+2. The adjusted R-squared is reasonable at .90
+3. The model is significant.
+
+We evaluate the model performance by comparing the label values to the predicted values and computing a score 
+Smaller residuals are good 	
+When you plot the residuals, ensure there are no significant deviations from the ideal normal 
+Plot the residuals: 
+  Qqplot: curved pattern, negative skew  
+
+
+Analysis of  model 2:
+  The purpose of this model is to predict the hu.diameter (label)  based on wind and pressure (features).
+
+I created a list of columns of interest 'hu.diameter', 'wind', 'pressure' and plotted histograms for each. 
+All seemed skewed. Hu.diameter has an outlier value, which I remove. The data distribution for wind density  is skewed to the left. The data distribution for pressure density  is skewed to the right. From this, I know I will need to transform and normalize the data. Hu.diameter is transformed with the log function, wind is transformed with the square root function, and pressure is transformed with the square root function. 
+The transformed variables are plotted and we can see that the hu.diameter variable responded well to the log function as the data distribution for the density is largely a symmetric distribution. The wind now appears to be slightly skewed to the left after the square root transformation, but the data distribution for wind density is more symmetrical than before the transformation. The pressure variable did not respond well to the square root transformation, so I tried a log transformation, which resulted in a more symmetrical distribution. The distribution is still skewed to the right and is less than ideal, but is more symmetrical than before the transformation took place.
+
+We then normalize the data, changing the range of data values between 0 and 1 by subtracting the mean of all data points from each individual data point, then dividing those points by the standard deviation of all points. This is performed on the wind, hu.diameter, and pressure variables. The normalized variables are plotted with histograms.  of all three, the hu.diameter variable is the most symmetrically distributed. 
+I now am able to build a multivariate linear model using the lm() function and print the confidence intervals of the model coefficients.  
+The P value is <  0.05. It is significant, so the null hypothesis can be rejected.
+
+Coefficients tell you which relationships in your model are statistically significant 
+Positive coefficient indicates that as the value of the independent variable increases, the mean of the dependent variable also tends to increase. Negative suggests that as the independent variable increases, the dependent variable tends to decrease. 
+Independent variable is the variable that is changed or controlled in a scientific experiment to test the effects on the dependent variable. Dependent variable is the variable being tested and measured in a scientific experiment 
+
+1. The residual standard error is reasonably small at 0.3055.
+2. The adjusted R-squared is reasonable at .90
+3. The model is significant.
+
+We evaluate the model performance by comparing the label values to the predicted values and computing a score 
+Smaller residuals are good 	
+When you plot the residuals, ensure there are no significant deviations from the ideal normal 
+Plot the residuals: 
+  Qqplot: curved pattern, negative skew  
+
+# Analysis of Hypothesis T-Test:
+  # Null hypothesis = not statistically significant difference 
+  # in means of the two sets of values
+  # p value dicates significance
+  
+# Null hypothesis = not statistically significant difference in means of the two sets of values
+# p value dicates significance
+  
+
+
+
