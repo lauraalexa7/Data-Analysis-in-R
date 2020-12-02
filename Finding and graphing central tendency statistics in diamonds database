@@ -28,7 +28,7 @@ diamonds %>% glimpse()
 ? diamonds
 
 #str(diamonds)
-# attempt to view diamonds data - not yet availabe in Jupyter kernel -View(diamonds)
+# attempt to view diamonds data - not yet availabe in Jupyter kernel: View(diamonds)
 Observations: 53,940
 Variables: 10
 $ carat   <dbl> 0.23, 0.21, 0.23, 0.29, 0.31, 0.24, 0.24, 0.26, 0.22, 0.23, 0…
@@ -200,7 +200,6 @@ diamonds %>%
 diamonds %>%
   group_by(color) %>%
   summarise(counts = n() / nrow(diamonds))
-
 
 
 # clarity
@@ -453,20 +452,14 @@ ggplot(data = diamonds) + geom_point(mapping = aes(x = carat, y = price)) +
 Histogram Plot
 # Example:
 # placeholder
-# Let's specify a binwidth. This would be the width in idamonds prices
-# Let's try 5 mpg. I also want to see the bins a bit more clearly so let's adjust 
-# the color and fill and theme. Color is the outline. Fill is the inside. Theme makes 
-# it easy to change the background without having to find a detailed reference 
-# of how to change individual plot properties.
+# Let's specify a binwidth. This would be the width in diamonds prices
+# I also want to see the bins a bit more clearly so let's adjust 
+# the color and fill and theme.
 
-# My quick and dirty histogram formatting is color="black", fill="gray" and theme_classic(). 
-# Let's also define a variable for the binwidth so it is easy to change and try out different values.
+
+# Defibe a variable for the binwidth so it is easy to change and try out different values.
 # Since the shape can change drastically depending on the binwidth, it is important to convey the 
-# binwidth on the plot. I use the subtitle and str_c() with the binwidth variable to do this automatically.
-# Histogram of diamonds x=price
-# Create a variable for binwidth and use it to adjust the binwidth
-# Display the binwidth in the subtitle
-# Change the bars to gray with black outline and white background
+# binwidth on the plot.
 
 bw <- 5000
 diamonds %>% ggplot(aes(x=price)) + 
@@ -476,20 +469,11 @@ diamonds %>% ggplot(aes(x=price)) +
          subtitle=str_c("Binwidth:", bw),
          x="Diamonds Prices", y="")
 
-
-# Density Plot
-# placeholder
-# Probability Density
-
-# If you are looking for a smoother, version of the frequency plot, look no further than geom_density().
-# It is the geom_smooth version of geom_freqpoly. Density plots are good at visualizing the spread of
-# continuous data in terms of probability...which is an area plot with the total area summing to 1.
+# Density plots are good at visualizing the spread of
+# continuous data in terms of probability, which is an area plot with the total area summing to 1.
 # This means that the y axis reflects the probability of that value occurring in the underlying data distribution.
 # geom_density is a smoothed version of the histogram
-# Let's give it a try.
 # Density of mpg x=hwy
-# Use fill="blue" to show the area
-# Hint: geom_density() with fill
 
 diamonds %>% ggplot(aes(x=price, y=)) + 
     geom_density(fill="green") +
@@ -502,10 +486,9 @@ diamonds %>% ggplot(aes(x=price, y=)) +
 # Violin plot by categorical variable
 # Another plot to show the distribution of the data is the violin plot, geom_violin(). It is a cross
 # between a boxplot and a density plot. It works best with a categorical variable and a continuous 
-# variable like the boxplot. Let's give it a try.
+# variable like the boxplot.
 
-# Violin of mpg x=carat, y=pric, fill=carat, 
-# Hint: geom_violin(), as.factor(), filter(), %in%, c()
+# Violin: x=carat, y=pric, fill=carat, 
 diamonds %>% 
     ggplot(aes(x=carat, y=price, fill=carat)) + 
     geom_violin() +
@@ -544,9 +527,7 @@ diamonds %>% filter(color %in% c("D", "E", "F", "G", "H", "I", "J")) %>%
          subtitle="Violin plot",
          y="Diamond Price")
 
-
 # Box Plot
- 
 # boxplots are good for mapping continuous and categorical variables
 b_plot <- ggplot(diamonds, aes(carat, price))
 b_plot + geom_boxplot()
