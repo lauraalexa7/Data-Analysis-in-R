@@ -3,21 +3,25 @@
 >- Analysis:
 >>1. Data Mining 
 >>2. Transformation
->>>> Cleaning (removing NULL values)
->>>> Renaming and converting Data
->>>> Joining data sets
+>>>>- Cleaning (removing NULL values)
 >
->>3. Visualization to explore
-patterns and correlations between variables in the databases
->>>> Bar charts
->>>> Scatterplots
->>> Linear Model
+>>>>- Renaming and converting Data
+>
+>>>>- Joining data sets
+>
+>>3. Visualizations: Exploring
+Patterns and Correlations Between Variables
+>>>>- Bar charts
+>
+>>>>- Scatterplots
+>
+>>>>- Linear Model
 >
 >>4. Statistical Analysis
->>>> Performing T-tests
->>>> >
+>>>>- Performing T-tests
+>
 >>5. Supervised Learning
->>>> Creating classification and regression models
+>>>>- Classification and Regression Models
 > 
 >- Data sets: 
 >>1. mpg
