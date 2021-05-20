@@ -1,9 +1,27 @@
-# Data-Analysis-in-R
-The various files in this project involve
-data mining, transformation, visualization, and analysis in R using mpg, diamonds, housing, and sales data sets.
-This includes cleaning (removing NULL values) and transforming (renaming or converting)
-data, as well as joining data sets and examining statistics by performing T-tests.
-Graphical representations (bar chart, scatterplot, linear model) are utilized to explore
-patterns and correlations between variables in the databases. 
-
-Supervised learning is explored in R by creating classification and regression models.
+### Data-Analysis-in-R
+>
+>- Analysis:
+>>1. Data Mining 
+>>2. Transformation
+>>>> Cleaning (removing NULL values)
+>>>> Renaming and converting Data
+>>>> Joining data sets
+>
+>>3. Visualization to explore
+patterns and correlations between variables in the databases
+>>>> Bar charts
+>>>> Scatterplots
+>>> Linear Model
+>
+>>4. Statistical Analysis
+>>>> Performing T-tests
+>>>> >
+>>5. Supervised Learning
+>>>> Creating classification and regression models
+> 
+>- Data sets: 
+>>1. mpg
+>>2. diamonds
+>>3. housing
+>>4. sales
+> 
